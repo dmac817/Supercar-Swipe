@@ -177,21 +177,43 @@ header {
   min-height: 0;
   background: #0b0b0f;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
 }
-.card-photo img {
+.card-photo .photo-blur {
+  position: absolute;
+  left: -18%;
+  top: -18%;
+  width: 136%;
+  height: 136%;
+  max-width: none;
+  object-fit: cover;
+  filter: blur(26px) brightness(0.38) saturate(1.15);
+  pointer-events: none;
+  z-index: 0;
+}
+.card-photo .photo-frame {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: 100%;
+}
+@supports (width: 1cqh) {
+  .card-photo .photo-frame {
+    width: min(100cqw, calc(100cqh * 3 / 2));
+  }
+}
+.card-photo .photo-frame img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: transparent;
   pointer-events: none;
   -webkit-user-drag: none;
-}
-.card-photo::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 80px;
-  background: linear-gradient(to top, rgba(23,23,31,0.55), transparent);
-  pointer-events: none;
 }
 .placeholder {
   width: 100%;
@@ -413,10 +435,41 @@ header {
   padding: 8px;
   align-items: center;
 }
-.result-row img, .result-row .ph-thumb {
+.result-thumb {
+  position: relative;
   width: 84px;
   height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #111;
+  flex: 0 0 auto;
+}
+.result-thumb .thumb-blur,
+.result-thumb .thumb-main {
+  width: 84px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.result-thumb .thumb-main {
+  position: relative;
+  z-index: 1;
+}
+.result-thumb .thumb-blur {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  z-index: 0;
+  width: 100px;
+  height: 72px;
+  max-width: none;
   object-fit: cover;
+  filter: blur(7px) brightness(0.4);
+  border-radius: 0;
+}
+.result-row .ph-thumb {
+  width: 84px;
+  height: 56px;
   border-radius: 8px;
   background: #111;
 }
@@ -606,7 +659,7 @@ header {
       <h2 id="credits-title">Photo credits</h2>
       <p class="lead">Photographs are from Wikimedia Commons under their stated free licenses, resized for this app. Cars without a suitable freely licensed photo use a typographic placeholder. Click a link for the original file page.</p>
       <div class="credit-item"><div class="cname">Acura Integra Type R</div><div class="cmeta">Photo: Jacob Frey 4A · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Acura_Integra_Type_R_black.jpg" target="_blank" rel="noopener noreferrer">Acura Integra Type R black.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Acura NSX Type S</div><div class="cmeta">Photo: Kevauto · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Acura_NSX_Type_S,_front_5.4.25.jpg" target="_blank" rel="noopener noreferrer">2022 Acura NSX Type S, front 5.4.25.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Acura NSX Type S</div><div class="cmeta">Photo: Charles from Port Chester · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Acura_NSX_Type_S_(2022)_(53795306497).jpg" target="_blank" rel="noopener noreferrer">Acura NSX Type S (2022) (53795306497).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Acura RSX Type-S</div><div class="cmeta">Photo: Matt · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Acura_RSX_Type_S.jpg" target="_blank" rel="noopener noreferrer">Acura RSX Type S.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Alfa Romeo 4C / 4C Spider</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Alfa_Romeo_4C_Coup%C3%A9_IMG_7312.jpg" target="_blank" rel="noopener noreferrer">Alfa Romeo 4C Coupé IMG 7312.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Audi RS 5 Coupe</div><div class="cmeta">Photo: Vauxford · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2017_Audi_RS_5_Coupe_Front.jpg" target="_blank" rel="noopener noreferrer">2017 Audi RS 5 Coupe Front.jpg</a></div></div>
@@ -617,11 +670,11 @@ header {
         <div class="credit-item"><div class="cname">BMW M3 Coupe (E92)</div><div class="cmeta">Photo: Navigator84 · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:BMW_M3_E92_China_2012-04-15.jpg" target="_blank" rel="noopener noreferrer">BMW M3 E92 China 2012-04-15.jpg</a></div></div>
         <div class="credit-item"><div class="cname">BMW M4 CS</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:BMW_M4_CS_(G82)_VR46_Edition_IAA_2025_DSC_1308.jpg" target="_blank" rel="noopener noreferrer">BMW M4 CS (G82) VR46 Edition IAA 2025 DSC 1308.jpg</a></div></div>
         <div class="credit-item"><div class="cname">BMW M6 Competition</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2017_BMW_M6_Auto_2.jpg" target="_blank" rel="noopener noreferrer">2017 BMW M6 Auto 2.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">BMW M8 Competition</div><div class="cmeta">Photo: Kidfly182 · CC BY 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:BMW_M8_Competition_2024.jpg" target="_blank" rel="noopener noreferrer">BMW M8 Competition 2024.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW M8 Competition</div><div class="cmeta">Photo: Alexandre Prevot · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:BMW_M8_Competition_Coup%C3%A9_F92_(53598077098).jpg" target="_blank" rel="noopener noreferrer">BMW M8 Competition Coupé F92 (53598077098).jpg</a></div></div>
         <div class="credit-item"><div class="cname">BMW Z3 M Coupe / M Roadster</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1999_BMW_Z3_M_Coupe_Blue.jpg" target="_blank" rel="noopener noreferrer">1999 BMW Z3 M Coupe Blue.jpg</a></div></div>
         <div class="credit-item"><div class="cname">BMW Z4 M40i</div><div class="cmeta">Photo: Vauxford · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2019_BMW_Z4_M40i_Front.jpg" target="_blank" rel="noopener noreferrer">2019 BMW Z4 M40i Front.jpg</a></div></div>
         <div class="credit-item"><div class="cname">BMW Z8</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2002_BMW_Z8_4.jpg" target="_blank" rel="noopener noreferrer">2002 BMW Z8 4.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Cadillac ATS-V Coupe</div><div class="cmeta">Photo: Zytonits · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Cadillac_ATS_-V_coupe_avant_(23855921054).jpg" target="_blank" rel="noopener noreferrer">Cadillac ATS -V coupe avant (23855921054).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Cadillac ATS-V Coupe</div><div class="cmeta">Photo: Yahya S. · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Cadillac_ATS-V_Coupe_(16135110887).jpg" target="_blank" rel="noopener noreferrer">Cadillac ATS-V Coupe (16135110887).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Cadillac CTS-V Coupe</div><div class="cmeta">Photo: HJUdall · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:12_Cadillac_CTS-V_Coupe_Base.jpg" target="_blank" rel="noopener noreferrer">12 Cadillac CTS-V Coupe Base.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Cadillac XLR-V</div><div class="cmeta">Photo: MercurySable99 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2006_Cadillac_XLR-V,_front_left,_09-27-2025.jpg" target="_blank" rel="noopener noreferrer">2006 Cadillac XLR-V, front left, 09-27-2025.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Chevrolet Camaro ZL1</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2018_Chevrolet_Camaro_ZL1_1LE_SCD_24.jpg" target="_blank" rel="noopener noreferrer">2018 Chevrolet Camaro ZL1 1LE SCD 24.jpg</a></div></div>
@@ -655,7 +708,7 @@ header {
         <div class="credit-item"><div class="cname">Mercedes-Benz AMG C 63 S Coupe</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_C_63S_Coupe,_IAA_2017,_Frankfurt_(1Y7A3011).jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG C 63S Coupe, IAA 2017, Frankfurt (1Y7A3011).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Mercedes-Benz CLK 63 AMG Black Series</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2008_Mercedes-Benz_CLK_63_AMG_Black_Series_LC23.jpg" target="_blank" rel="noopener noreferrer">2008 Mercedes-Benz CLK 63 AMG Black Series LC23.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Mercedes-Benz AMG GT 63 S E Performance</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_C192_GT_63_S_E_Performance_IMG_9255.jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG C192 GT 63 S E Performance IMG 9255.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Mercedes-Benz AMG SL 63 S E Performance</div><div class="cmeta">Photo: Tokumeigakarinoaoshima · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_SL_63_S_E_Performance_(R232)_front.jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG SL 63 S E Performance (R232) front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz AMG SL 63 S E Performance</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_SL_63_(R232)_IMG_1271.jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG SL 63 (R232) IMG 1271.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Mercedes-Benz SLC 43 AMG</div><div class="cmeta">Photo: Zytonits · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-Benz_SLC_43_AMG_2_(32706611205).jpg" target="_blank" rel="noopener noreferrer">Mercedes-Benz SLC 43 AMG 2 (32706611205).jpg</a></div></div>
         <div class="credit-item"><div class="cname">MINI John Cooper Works Coupe / Roadster</div><div class="cmeta">Photo: IFCAR · Public domain</div><div><a href="https://commons.wikimedia.org/wiki/File:2012_Mini_John_Cooper_Works_Coupe_--_11-26-2011_front.jpg" target="_blank" rel="noopener noreferrer">2012 Mini John Cooper Works Coupe -- 11-26-2011 front.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Mitsubishi 3000GT VR-4</div><div class="cmeta">Photo: IFCAR · Public domain</div><div><a href="https://commons.wikimedia.org/wiki/File:Mitsubishi_3000GT_--_03-21-2012.JPG" target="_blank" rel="noopener noreferrer">Mitsubishi 3000GT -- 03-21-2012.JPG</a></div></div>
@@ -670,11 +723,11 @@ header {
         <div class="credit-item"><div class="cname">Porsche 911 GT3 RS</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Porsche_911_GT3_RS_(2022)_1X7A7164.jpg" target="_blank" rel="noopener noreferrer">Porsche 911 GT3 RS (2022) 1X7A7164.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Porsche 911 Turbo S</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Porsche_992_Turbo_S_coupes_IAA_2025_DSC_1835.jpg" target="_blank" rel="noopener noreferrer">2025 Porsche 992 Turbo S coupes IAA 2025 DSC 1835.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Porsche 928 GTS</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1993_Porsche_928_GTS_Auto.jpg" target="_blank" rel="noopener noreferrer">1993 Porsche 928 GTS Auto.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Porsche 944 Turbo</div><div class="cmeta">Photo: Bull-Doser · Public domain</div><div><a href="https://commons.wikimedia.org/wiki/File:%2786-%2791_Porsche_944_Coupe_Turbo.JPG" target="_blank" rel="noopener noreferrer">&#x27;86-&#x27;91 Porsche 944 Coupe Turbo.JPG</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 944 Turbo</div><div class="cmeta">Photo: Handelsgeselschaft · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Porsche_944_Turbo.jpg" target="_blank" rel="noopener noreferrer">Porsche 944 Turbo.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Porsche 968</div><div class="cmeta">Photo: Bretbmorgan · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1994_Porsche_968.jpg" target="_blank" rel="noopener noreferrer">1994 Porsche 968.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Saturn Sky Red Line</div><div class="cmeta">Photo: Greg Gjerdingen from Willmar, USA · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2007_Saturn_Sky_Red_Line_(26912197702).jpg" target="_blank" rel="noopener noreferrer">2007 Saturn Sky Red Line (26912197702).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Subaru BRZ tS</div><div class="cmeta">Photo: Charles from Port Chester, New York · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:Subaru_BRZ_tS_(2026)_(55213576339)_(cropped).jpg" target="_blank" rel="noopener noreferrer">Subaru BRZ tS (2026) (55213576339) (cropped).jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Subaru SVX</div><div class="cmeta">Photo: Daniel Milner · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1992_Subaru_SVX_in_Maroon_-_Rear.jpg" target="_blank" rel="noopener noreferrer">1992 Subaru SVX in Maroon - Rear.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Subaru SVX</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:1994_Subaru_Alcyone_SVX_Version_L.jpg" target="_blank" rel="noopener noreferrer">1994 Subaru Alcyone SVX Version L.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Tesla Roadster (first generation)</div><div class="cmeta">Photo: Ank Kumar · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Tesla_Roadster_(first_generation)_at_Chelsea_Auto_Legends_2012_(Ank_Kumar_01.jpg" target="_blank" rel="noopener noreferrer">Tesla Roadster (first generation) at Chelsea Auto Legends 2012 (Ank Kumar 01.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Toyota Celica GT-S</div><div class="cmeta">Photo: SevenSixty2 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2003_Toyota_Celica_GT-S_cropped.jpg" target="_blank" rel="noopener noreferrer">2003 Toyota Celica GT-S cropped.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Toyota GR86 Premium</div><div class="cmeta">Photo: Elise240SX · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Toyota_GR86_Premium_in_Halo,_Front_Right,_04-10-2022.jpg" target="_blank" rel="noopener noreferrer">2022 Toyota GR86 Premium in Halo, Front Right, 04-10-2022.jpg</a></div></div>
@@ -688,15 +741,15 @@ header {
         <div class="credit-item"><div class="cname">Aston Martin Vanquish</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2014_Aston_Martin_Vanquish,_skyfall_silver.jpg" target="_blank" rel="noopener noreferrer">2014 Aston Martin Vanquish, skyfall silver.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Aston Martin Vantage S</div><div class="cmeta">Photo: Vauxford · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2013_Aston_Martin_V12_Vantage_S_Automatic_5.9.jpg" target="_blank" rel="noopener noreferrer">2013 Aston Martin V12 Vantage S Automatic 5.9.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Audi R8 GT</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2011_Audi_R8_GT_SCD_24.jpg" target="_blank" rel="noopener noreferrer">2011 Audi R8 GT SCD 24.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Bugatti Bolide</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Bugatti_Bolide_3.jpg" target="_blank" rel="noopener noreferrer">2024 Bugatti Bolide 3.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Bolide</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Bugatti_Bolide_4.jpg" target="_blank" rel="noopener noreferrer">2024 Bugatti Bolide 4.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Bugatti Centodieci</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Bugatti_Centodieci_Low.jpg" target="_blank" rel="noopener noreferrer">2022 Bugatti Centodieci Low.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Bugatti Chiron Super Sport</div><div class="cmeta">Photo: Dylan Johnson · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2020_Bugatti_Chiron_Super_Sport_300%2B_Prototype_Front.jpg" target="_blank" rel="noopener noreferrer">2020 Bugatti Chiron Super Sport 300+ Prototype Front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Chiron Super Sport</div><div class="cmeta">Photo: Vauxford · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2021_Bugatti_Chiron_Super_Sport_8.0_Front.jpg" target="_blank" rel="noopener noreferrer">2021 Bugatti Chiron Super Sport 8.0 Front.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Bugatti Divo</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Bugatti_Divo,_GIMS_2019,_Le_Grand-Saconnex_(GIMS0029).jpg" target="_blank" rel="noopener noreferrer">Bugatti Divo, GIMS 2019, Le Grand-Saconnex (GIMS0029).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Bugatti EB110 SS</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1993_Bugatti_EB110_SS_LC25.jpg" target="_blank" rel="noopener noreferrer">1993 Bugatti EB110 SS LC25.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Bugatti Mistral</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Bugatti_Mistral_2.jpg" target="_blank" rel="noopener noreferrer">Bugatti Mistral 2.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Mistral</div><div class="cmeta">Photo: Charles from Port Chester · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:Bugatti_Mistral_(2025)_(55215057289).jpg" target="_blank" rel="noopener noreferrer">Bugatti Mistral (2025) (55215057289).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Bugatti Tourbillon</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Bugatti_Tourbillon_5.jpg" target="_blank" rel="noopener noreferrer">2024 Bugatti Tourbillon 5.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Bugatti Veyron Super Sport</div><div class="cmeta">Photo: Autoviva · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:BugattiVeyronSuperSport.jpg" target="_blank" rel="noopener noreferrer">BugattiVeyronSuperSport.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Czinger 21C</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Czinger_21C_2.jpg" target="_blank" rel="noopener noreferrer">2024 Czinger 21C 2.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Czinger 21C</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Czinger_21C_(22782).jpg" target="_blank" rel="noopener noreferrer">2022 Czinger 21C (22782).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari 12Cilindri</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Ferrari_12Cilindri_in_Rosso_Imola,_front_left.jpg" target="_blank" rel="noopener noreferrer">2025 Ferrari 12Cilindri in Rosso Imola, front left.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari 296 Speciale</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Ferrari_296_Speciale.jpg" target="_blank" rel="noopener noreferrer">2025 Ferrari 296 Speciale.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari 348</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1992_Ferrari_348.jpg" target="_blank" rel="noopener noreferrer">1992 Ferrari 348.jpg</a></div></div>
@@ -707,16 +760,16 @@ header {
         <div class="credit-item"><div class="cname">Ferrari 550 Maranello</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1998_Ferrari_550_Maranello.jpg" target="_blank" rel="noopener noreferrer">1998 Ferrari 550 Maranello.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari 575M</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2002_Ferrari_575M.jpg" target="_blank" rel="noopener noreferrer">2002 Ferrari 575M.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari 599 GTO</div><div class="cmeta">Photo: Handelsgeselschaft · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_599_GTO,_Pau_2015.jpg" target="_blank" rel="noopener noreferrer">Ferrari 599 GTO, Pau 2015.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Ferrari 812 Competizione</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2023_Ferrari_812_Competizione_Aperta_2.jpg" target="_blank" rel="noopener noreferrer">2023 Ferrari 812 Competizione Aperta 2.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 812 Competizione</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Ferrari_812_Competizione_(12631).jpg" target="_blank" rel="noopener noreferrer">2022 Ferrari 812 Competizione (12631).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari California T</div><div class="cmeta">Photo: Dllu · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_California_T_right_side.jpg" target="_blank" rel="noopener noreferrer">Ferrari California T right side.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Ferrari Daytona SP3</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Ferrari_Daytona_SP3_rear.jpg" target="_blank" rel="noopener noreferrer">2024 Ferrari Daytona SP3 rear.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Ferrari Enzo</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:2004_Enzo_Ferrari_rear.jpg" target="_blank" rel="noopener noreferrer">2004 Enzo Ferrari rear.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari Daytona SP3</div><div class="cmeta">Photo: Prova MO · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_Daytona_SP3_front_side_at_CF_2022.jpg" target="_blank" rel="noopener noreferrer">Ferrari Daytona SP3 front side at CF 2022.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari Enzo</div><div class="cmeta">Photo: Andrew Basterfield · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_Enzo_-_Flickr_-_andrewbasterfield.jpg" target="_blank" rel="noopener noreferrer">Ferrari Enzo - Flickr - andrewbasterfield.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari F12tdf</div><div class="cmeta">Photo: Tokumeigakarinoaoshima · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Osaka_Auto_Messe_2017_(320)_-_Ferrari_F12tdf_with_TWS_wheel.jpg" target="_blank" rel="noopener noreferrer">Osaka Auto Messe 2017 (320) - Ferrari F12tdf with TWS wheel.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari F355</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1995_Ferrari_F355_GTS.jpg" target="_blank" rel="noopener noreferrer">1995 Ferrari F355 GTS.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari F430 Scuderia</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2008_Ferrari_F430_Scuderia_3.jpg" target="_blank" rel="noopener noreferrer">2008 Ferrari F430 Scuderia 3.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari F50</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:1997_Ferrari_F50_front.jpg" target="_blank" rel="noopener noreferrer">1997 Ferrari F50 front.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari F512 M</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1996_Ferrari_F512_M_in_Rosso_Corsa,_front_right.jpg" target="_blank" rel="noopener noreferrer">1996 Ferrari F512 M in Rosso Corsa, front right.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Ferrari F8 Tributo</div><div class="cmeta">Photo: Sam N · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2020_Ferrari_F8_Tributo_3.9.jpg" target="_blank" rel="noopener noreferrer">2020 Ferrari F8 Tributo 3.9.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari F8 Tributo</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_F8_Tributo,_GIMS_2019,_Le_Grand-Saconnex_(GIMS1319).jpg" target="_blank" rel="noopener noreferrer">Ferrari F8 Tributo, GIMS 2019, Le Grand-Saconnex (GIMS1319).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari F80</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Ferrari_F80.jpg" target="_blank" rel="noopener noreferrer">2025 Ferrari F80.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari F40</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:1990_Ferrari_F40_front.jpg" target="_blank" rel="noopener noreferrer">1990 Ferrari F40 front.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Ferrari LaFerrari</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_LaFerrari_GIMS_2024_1X7A2272.jpg" target="_blank" rel="noopener noreferrer">Ferrari LaFerrari GIMS 2024 1X7A2272.jpg</a></div></div>
@@ -736,7 +789,7 @@ header {
         <div class="credit-item"><div class="cname">Koenigsegg CC850</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_CC850_Auto_Zuerich_2025_DSC_3655.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg CC850 Auto Zuerich 2025 DSC 3655.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Koenigsegg CCR</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_CCR_2004.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg CCR 2004.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Koenigsegg CCX</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_CCX_2.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg CCX 2.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Koenigsegg Gemera</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_Gemera.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg Gemera.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg Gemera</div><div class="cmeta">Photo: Calreyn88 · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:2023_Koenigsegg_Gemera.jpg" target="_blank" rel="noopener noreferrer">2023 Koenigsegg Gemera.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Koenigsegg Jesko</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_Jesko_Auto_Zuerich_2023_1X7A0924.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg Jesko Auto Zuerich 2023 1X7A0924.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Koenigsegg One:1</div><div class="cmeta">Photo: Eduardo Parise / eduparise · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_One-1_-_Gen%C3%A8ve_2014_-_01.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg One-1 - Genève 2014 - 01.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Koenigsegg Regera</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2019_Koenigsegg_Regera_HCC23.jpg" target="_blank" rel="noopener noreferrer">2019 Koenigsegg Regera HCC23.jpg</a></div></div>
@@ -746,7 +799,7 @@ header {
         <div class="credit-item"><div class="cname">Lamborghini Diablo VT 6.0</div><div class="cmeta">Photo: Ank Kumar · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2000_Lamborghini_Diablo_VT_6.0_at_Chelsea_Auto_Legends_2012_(Ank_Kumar).jpg" target="_blank" rel="noopener noreferrer">2000 Lamborghini Diablo VT 6.0 at Chelsea Auto Legends 2012 (Ank Kumar).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Lamborghini Gallardo LP 570-4 Superleggera</div><div class="cmeta">Photo: easylocum from Gourock, United Kingdom · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Gallardo_LP_570-4_Superleggera_-_easylocum.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Gallardo LP 570-4 Superleggera - easylocum.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Lamborghini Huracán STO</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Hurac%C3%A1n_STO_IMG_9892.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Huracán STO IMG 9892.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Lamborghini Murciélago LP 670-4 SV</div><div class="cmeta">Photo: Aero777 · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Murci%C3%A9lago_LP_670%E2%80%934_SuperVeloce_at_Sepang_International_Circuit,_Malaysia.JPG" target="_blank" rel="noopener noreferrer">Lamborghini Murciélago LP 670–4 SuperVeloce at Sepang International Circuit, Malaysia.JPG</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Murciélago LP 670-4 SV</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Murcielago_SV_2010.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Murcielago SV 2010.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Lamborghini Reventón</div><div class="cmeta">Photo: Taco Ekkel from Amsterdam · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Revent%C3%B3n.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Reventón.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Lamborghini Revuelto</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Revuelto_DSC_6985.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Revuelto DSC 6985.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Lamborghini Sián</div><div class="cmeta">Photo: Johannes Maximilian · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Si%C3%A1n_IAA_2019_JM_1094.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Sián IAA 2019 JM 1094.jpg</a></div></div>
@@ -771,28 +824,28 @@ header {
         <div class="credit-item"><div class="cname">McLaren 765LT</div><div class="cmeta">Photo: Liam Walker · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2020_McLaren_765LT_4.0.jpg" target="_blank" rel="noopener noreferrer">2020 McLaren 765LT 4.0.jpg</a></div></div>
         <div class="credit-item"><div class="cname">McLaren Artura</div><div class="cmeta">Photo: Yu Chu Chin · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_Artura_at_the_2026_Adelaide_Rally_Street_Party_on_King_William_Road_(028A4067).jpg" target="_blank" rel="noopener noreferrer">McLaren Artura at the 2026 Adelaide Rally Street Party on King William Road (028A4067).jpg</a></div></div>
         <div class="credit-item"><div class="cname">McLaren F1</div><div class="cmeta">Photo: Chelsea Jay · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1996_McLaren_F1_Chassis_No_63_6.1_Front.jpg" target="_blank" rel="noopener noreferrer">1996 McLaren F1 Chassis No 63 6.1 Front.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">McLaren GT</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_McLaren_GT.jpg" target="_blank" rel="noopener noreferrer">2022 McLaren GT.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren GT</div><div class="cmeta">Photo: Oleg Yunakov · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_GT_-_03.jpg" target="_blank" rel="noopener noreferrer">McLaren GT - 03.jpg</a></div></div>
         <div class="credit-item"><div class="cname">McLaren MP4-12C</div><div class="cmeta">Photo: M 93 · CC BY-SA 3.0 de</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_MP4-12C_%E2%80%93_Frontansicht_(1),_30._August_2012,_D%C3%BCsseldorf.jpg" target="_blank" rel="noopener noreferrer">McLaren MP4-12C – Frontansicht (1), 30. August 2012, Düsseldorf.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">McLaren P1</div><div class="cmeta">Photo: Chelsea Jay · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2014_McLaren_P1_3.8.jpg" target="_blank" rel="noopener noreferrer">2014 McLaren P1 3.8.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren P1</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2015_Track_Silver_McLaren_P1.jpg" target="_blank" rel="noopener noreferrer">2015 Track Silver McLaren P1.jpg</a></div></div>
         <div class="credit-item"><div class="cname">McLaren Senna</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_Senna,_GIMS_2018,_Le_Grand-Saconnex_(1X7A0404).jpg" target="_blank" rel="noopener noreferrer">McLaren Senna, GIMS 2018, Le Grand-Saconnex (1X7A0404).jpg</a></div></div>
-        <div class="credit-item"><div class="cname">McLaren Speedtail</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_Speedtail_Genf_2019_1Y7A5298.jpg" target="_blank" rel="noopener noreferrer">McLaren Speedtail Genf 2019 1Y7A5298.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren Speedtail</div><div class="cmeta">Photo: el.guy08_11 · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2019_McLaren_Speedtail_(Rob_Melville)_-_50690710141.jpg" target="_blank" rel="noopener noreferrer">2019 McLaren Speedtail (Rob Melville) - 50690710141.jpg</a></div></div>
         <div class="credit-item"><div class="cname">McLaren W1</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_McLaren_W1_SP25.jpg" target="_blank" rel="noopener noreferrer">2024 McLaren W1 SP25.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Mercedes-Benz AMG One</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_One,_EMS_2024,_Essen_(P1032097).jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG One, EMS 2024, Essen (P1032097).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz AMG One</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_One_IAA_2023_1X7A0454.jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG One IAA 2023 1X7A0454.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Mercedes-Benz CLK GTR</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1998_Mercedes-Benz_CLK_GTR_SP20.jpg" target="_blank" rel="noopener noreferrer">1998 Mercedes-Benz CLK GTR SP20.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Mercedes-Benz SLR McLaren 722</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2007_Mercedes-Benz_SLR_McLaren_722_LC25.jpg" target="_blank" rel="noopener noreferrer">2007 Mercedes-Benz SLR McLaren 722 LC25.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Mercedes-Benz SLS AMG Black Series</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2013_Mercedes-Benz_SLS_AMG_Black_Series_white.jpg" target="_blank" rel="noopener noreferrer">2013 Mercedes-Benz SLS AMG Black Series white.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Noble M12 GTO-3R</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Noble_M12_GTO-3R_in_Red,_front_right_(New_Canaan).jpg" target="_blank" rel="noopener noreferrer">Noble M12 GTO-3R in Red, front right (New Canaan).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Noble M600</div><div class="cmeta">Photo: Edvvc from London, UK · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2015_Noble_M600_51.33_seconds_(19705794269).jpg" target="_blank" rel="noopener noreferrer">2015 Noble M600 51.33 seconds (19705794269).jpg</a></div></div>
         <div class="credit-item"><div class="cname">Pagani Huayra Roadster BC</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Pagani_Huayra_BC_Roadster,_BAS_24,_Brussels_(P1170491-RR).jpg" target="_blank" rel="noopener noreferrer">Pagani Huayra BC Roadster, BAS 24, Brussels (P1170491-RR).jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Pagani Utopia</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Pagani_Utopia_Auto_Zuerich_2023_1X7A1183.jpg" target="_blank" rel="noopener noreferrer">Pagani Utopia Auto Zuerich 2023 1X7A1183.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Pagani Zonda F Clubsport</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Pagani_Zonda_F_Clubsport.jpg" target="_blank" rel="noopener noreferrer">Pagani Zonda F Clubsport.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Pagani Utopia</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Pagani_Utopia_(no._26)_in_Yellow_and_Black,_front_right.jpg" target="_blank" rel="noopener noreferrer">2024 Pagani Utopia (no. 26) in Yellow and Black, front right.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Pagani Zonda F Clubsport</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Red_Zonda_F_CS.jpg" target="_blank" rel="noopener noreferrer">Red Zonda F CS.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Pininfarina Battista</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Pininfarina_Battista_in_Oro_Liquido_and_Nero_Torino,_front_right.jpg" target="_blank" rel="noopener noreferrer">2022 Pininfarina Battista in Oro Liquido and Nero Torino, front right.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Porsche 911 GT1 Straßenversion</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Porsche_911_GT1_Stra%C3%9Fenversion.jpg" target="_blank" rel="noopener noreferrer">Porsche 911 GT1 Straßenversion.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Porsche 918 Spyder</div><div class="cmeta">Photo: Chelsea Jay · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2015_Porsche_918_Spyder_4.6.jpg" target="_blank" rel="noopener noreferrer">2015 Porsche 918 Spyder 4.6.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Porsche Carrera GT</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Porsche_Carrera_GT_Classic-Gala_2025_DSC_0837.jpg" target="_blank" rel="noopener noreferrer">Porsche Carrera GT Classic-Gala 2025 DSC 0837.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Rimac Concept_One</div><div class="cmeta">Photo: This picture has been taken by Oleg Yunakov . Contact e-mail: yunakov gmail.com . Image can be used in accordance with the terms of the СС-BY-SA license. Other photos can be seen h · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Rimac_Concept_One_-_01.jpg" target="_blank" rel="noopener noreferrer">Rimac Concept One - 01.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Rimac Nevera</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Rimac_Nevera.jpg" target="_blank" rel="noopener noreferrer">Rimac Nevera.jpg</a></div></div>
-        <div class="credit-item"><div class="cname">Saleen S7 Twin Turbo</div><div class="cmeta">Photo: Valder137 · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Saleen_S7_2007_Twin_Turbo_LFront_CECF_9April2011_(14597584781).jpg" target="_blank" rel="noopener noreferrer">Saleen S7 2007 Twin Turbo LFront CECF 9April2011 (14597584781).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Saleen S7 Twin Turbo</div><div class="cmeta">Photo: Axion23 · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:White_(Bianco_Fuji)_Saleen_S7_Twin_Turbo_(19894603162).jpg" target="_blank" rel="noopener noreferrer">White (Bianco Fuji) Saleen S7 Twin Turbo (19894603162).jpg</a></div></div>
         <div class="credit-item"><div class="cname">SSC Tuatara</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_SSC_Tuatara_Striker_in_Silver,_front_right.jpg" target="_blank" rel="noopener noreferrer">2022 SSC Tuatara Striker in Silver, front right.jpg</a></div></div>
         <div class="credit-item"><div class="cname">SSC Ultimate Aero</div><div class="cmeta">Photo: Ank kumar · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:SSC_Ultimate_Aero,_London_01.jpg" target="_blank" rel="noopener noreferrer">SSC Ultimate Aero, London 01.jpg</a></div></div>
         <div class="credit-item"><div class="cname">Spyker C8 Laviolette</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2009_Spyker_C8_Laviolette_Coupe.jpg" target="_blank" rel="noopener noreferrer">2009 Spyker C8 Laviolette Coupe.jpg</a></div></div>
@@ -1146,21 +1199,24 @@ header {
     const card = document.createElement("article");
     card.className = "card " + (isTop ? "is-top" : offset === 1 ? "is-next" : "is-third");
     card.dataset.id = car.id;
-    const media = car.image
-      ? '<img alt="' + escapeHtml(car.name) + '" src="' + escapeHtml(car.image) + '" draggable="false">'
-      : '<div class="placeholder"><div class="ph-kicker">Supercar Swipe</div><div class="ph-name">' +
-        escapeHtml(car.name) + '</div><div class="ph-years">' + escapeHtml(car.years) +
-        '</div><div class="ph-note">Photo not available</div></div>';
     const pill = car.spec
       ? '<div class="spec-pill">' + escapeHtml(car.spec) + "</div>"
       : "";
+    const stamps =
+      '<div class="stamp super" aria-hidden="true">Supercar</div>' +
+      '<div class="stamp not" aria-hidden="true">Not</div>' +
+      '<div class="stamp hyper" aria-hidden="true">Hypercar</div>';
+    const media = car.image
+      ? '<img class="photo-blur" alt="" aria-hidden="true" src="' + escapeHtml(car.image) + '" draggable="false">' +
+        '<div class="photo-frame">' +
+          '<img class="photo-main" alt="' + escapeHtml(car.name) + '" src="' + escapeHtml(car.image) + '" draggable="false">' +
+          stamps + pill +
+        "</div>"
+      : '<div class="placeholder"><div class="ph-kicker">Supercar Swipe</div><div class="ph-name">' +
+        escapeHtml(car.name) + '</div><div class="ph-years">' + escapeHtml(car.years) +
+        '</div><div class="ph-note">Photo not available</div></div>' + stamps + pill;
     card.innerHTML =
-      '<div class="card-photo">' + media +
-        '<div class="stamp super" aria-hidden="true">Supercar</div>' +
-        '<div class="stamp not" aria-hidden="true">Not</div>' +
-        '<div class="stamp hyper" aria-hidden="true">Hypercar</div>' +
-        pill +
-      "</div>" +
+      '<div class="card-photo">' + media + "</div>" +
       '<div class="card-info">' +
         "<h2 class=\"card-name\">" + escapeHtml(car.name) + "</h2>" +
         '<p class="card-meta"><span class="year">' + escapeHtml(car.years) + "</span>" +
@@ -1453,7 +1509,10 @@ header {
       const you = state.votes[id];
       const communityView = communityMarkup(id);
       const thumb = car.image
-        ? '<img alt="" src="' + escapeHtml(car.image) + '">'
+        ? '<div class="result-thumb">' +
+            '<img class="thumb-blur" alt="" src="' + escapeHtml(car.image) + '">' +
+            '<img class="thumb-main" alt="" src="' + escapeHtml(car.image) + '">' +
+          "</div>"
         : '<div class="ph-thumb">No photo</div>';
       return (
         '<article class="result-row">' + thumb +
