@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#09090d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Swipe through two-door sports cars: right for supercar, left for not, up for hypercar.">
+  <title>Supercar Swipe</title>
+  <style>
+:root {
+  --bg: #09090d;
+  --bg-elev: #13131a;
+  --card: #17171f;
+  --text: #f7f2ea;
+  --muted: #9a9388;
+  --faint: #6d675e;
+  --line: rgba(255,255,255,0.08);
+  --gold: #e7c37a;
+  --gold-dim: #b8924a;
+  --super: #3ee6a0;
+  --super-dim: rgba(62,230,160,0.16);
+  --not: #ff5a6a;
+  --not-dim: rgba(255,90,106,0.16);
+  --hyper: #c084fc;
+  --hyper-gold: #e7c37a;
+  --hyper-dim: rgba(168,85,247,0.18);
+  --shadow: 0 22px 50px rgba(0,0,0,0.55);
+  --radius: 22px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", "Helvetica Neue", ui-sans-serif, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(184,146,74,0.16), transparent 55%),
+    radial-gradient(800px 500px at 100% 100%, rgba(255,90,106,0.06), transparent 50%),
+    radial-gradient(800px 500px at 0% 100%, rgba(62,230,160,0.05), transparent 50%),
+    radial-gradient(700px 420px at 50% 100%, rgba(168,85,247,0.07), transparent 55%),
+    var(--bg);
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+img { display: block; max-width: 100%; }
+a { color: var(--gold); }
+
+#app {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: calc(12px + var(--safe-top)) 18px calc(16px + var(--safe-bot));
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 2px 10px;
+  flex-shrink: 0;
+}
+.brand { display: flex; flex-direction: column; line-height: 1; }
+.brand-super {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+}
+.brand-or {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.header-actions { display: flex; gap: 6px; }
+.header-actions button {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.03);
+}
+.header-actions button:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+#swipe-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 2px 0 12px;
+  letter-spacing: 0.01em;
+}
+.hint kbd {
+  font: inherit;
+  color: var(--gold);
+  font-weight: 650;
+}
+.hint kbd.not { color: var(--not); }
+.hint kbd.super { color: var(--super); }
+.hint kbd.hyper { color: var(--hyper); }
+
+.stack-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  position: relative;
+}
+#stack {
+  position: relative;
+  width: min(360px, calc(100vw - 44px));
+  aspect-ratio: 3 / 4.15;
+  max-height: 100%;
+}
+.card {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  touch-action: none;
+  user-select: none;
+  will-change: transform;
+}
+.card.is-top { cursor: grab; z-index: 3; }
+.card.is-top:active { cursor: grabbing; }
+.card.is-next { z-index: 2; transform: scale(0.96) translateY(14px); opacity: 0.92; }
+.card.is-third { z-index: 1; transform: scale(0.92) translateY(26px); opacity: 0.7; }
+.card-photo {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #0b0b0f;
+  overflow: hidden;
+}
+.card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.card-photo::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 80px;
+  background: linear-gradient(to top, rgba(23,23,31,0.55), transparent);
+  pointer-events: none;
+}
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background:
+    radial-gradient(500px 280px at 50% 30%, rgba(231,195,122,0.14), transparent 70%),
+    linear-gradient(160deg, #16151d, #0c0c12 60%);
+}
+.placeholder .ph-kicker {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.placeholder .ph-name {
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.placeholder .ph-years { margin-top: 8px; color: var(--muted); font-size: 13px; }
+.placeholder .ph-note { margin-top: 16px; color: var(--faint); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.spec-pill {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  max-width: calc(100% - 20px);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(8, 8, 12, 0.66);
+  color: #f7f2ea;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+.stamp {
+  position: absolute;
+  top: 22px;
+  padding: 7px 12px;
+  border: 4px solid;
+  border-radius: 8px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.25);
+  z-index: 3;
+}
+.stamp.super {
+  left: 18px;
+  color: var(--super);
+  border-color: var(--super);
+  transform: rotate(-18deg);
+  background: rgba(10,20,16,0.25);
+}
+.stamp.not {
+  right: 18px;
+  color: var(--not);
+  border-color: var(--not);
+  transform: rotate(18deg);
+  background: rgba(20,10,12,0.25);
+}
+.stamp.hyper {
+  left: 50%;
+  top: auto;
+  bottom: 44px;
+  transform: translateX(-50%) rotate(-8deg);
+  color: var(--hyper-gold);
+  border-color: var(--hyper);
+  background: rgba(36,16,56,0.45);
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.35), 0 0 12px rgba(192,132,252,0.35);
+}
+.card-info {
+  padding: 14px 18px 16px;
+  background: var(--card);
+  flex: 0 0 auto;
+}
+.card-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.card-meta {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.card-meta .year { color: var(--gold); font-weight: 650; }
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px 0 6px;
+}
+.round {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 2px solid;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+}
+.round svg { width: 28px; height: 28px; }
+.round:hover { transform: translateY(-1px) scale(1.04); }
+.round:active { transform: scale(0.94); }
+.round:disabled { opacity: 0.35; cursor: default; transform: none; }
+.round.no { color: var(--not); border-color: var(--not); background: var(--not-dim); }
+.round.yes { color: var(--super); border-color: var(--super); background: var(--super-dim); }
+.round.hyper {
+  color: var(--hyper-gold);
+  border-color: var(--hyper);
+  background: linear-gradient(180deg, rgba(192,132,252,0.26), rgba(231,195,122,0.10));
+  box-shadow: 0 8px 22px rgba(168,85,247,0.32);
+}
+.round.undo {
+  width: 48px;
+  height: 48px;
+  color: var(--muted);
+  border-color: rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+}
+.round.undo svg { width: 20px; height: 20px; }
+
+.progress {
+  text-align: center;
+  color: var(--faint);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 2px 0 0;
+}
+
+#results-screen {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+#results-screen.show { display: flex; }
+#swipe-screen.hide { display: none; }
+
+.results-head { text-align: center; padding: 4px 8px 10px; flex-shrink: 0; }
+.results-head h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  font-weight: 750;
+}
+.results-summary { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+.community-note {
+  margin: 0 auto 10px;
+  max-width: 36em;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.chip {
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.03);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+}
+.chip.active { color: var(--text); border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); }
+.chip[data-filter="hyper"].active { color: var(--hyper-gold); border-color: var(--hyper); background: var(--hyper-dim); }
+.chip[data-filter="super"].active { color: var(--super); border-color: var(--super); background: var(--super-dim); }
+.chip[data-filter="not"].active { color: var(--not); border-color: var(--not); background: var(--not-dim); }
+
+.results-list {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.result-row {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 8px;
+  align-items: center;
+}
+.result-row img, .result-row .ph-thumb {
+  width: 84px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #111;
+}
+.result-row .ph-thumb {
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.result-row h3 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+.result-row .sub { margin: 2px 0 6px; color: var(--muted); font-size: 11px; }
+.you-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-bottom: 5px;
+}
+.you-pill.super { color: var(--super); background: var(--super-dim); }
+.you-pill.not { color: var(--not); background: var(--not-dim); }
+.you-pill.hyper {
+  color: var(--hyper-gold);
+  background: var(--hyper-dim);
+  box-shadow: inset 0 0 0 1px rgba(192,132,252,0.35);
+}
+.bar {
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 0 0 5px;
+  display: flex;
+}
+.bar-seg { height: 100%; flex: 0 0 auto; }
+.bar-seg.not { background: var(--not); }
+.bar-seg.super { background: var(--super); }
+.bar-seg.hyper { background: linear-gradient(90deg, #a855f7, var(--hyper-gold)); }
+.comm { font-size: 10px; color: var(--faint); }
+.comm strong { color: var(--muted); font-weight: 650; }
+.results-empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+
+.results-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+  flex-shrink: 0;
+  background: linear-gradient(to top, var(--bg) 70%, transparent);
+}
+.primary, .secondary {
+  flex: 1;
+  text-align: center;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+.primary {
+  background: var(--gold);
+  color: #1a1408;
+  box-shadow: 0 8px 24px rgba(231,195,122,0.25);
+}
+.secondary {
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: rgba(255,255,255,0.04);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.62);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px 16px calc(16px + var(--safe-bot));
+}
+.modal.show { display: flex; }
+.modal-panel {
+  width: min(520px, 100%);
+  max-height: min(80dvh, 640px);
+  overflow: auto;
+  background: #16161e;
+  border: 1px solid var(--line);
+  border-radius: 20px 20px 16px 16px;
+  padding: 18px 18px 20px;
+  box-shadow: var(--shadow);
+}
+.modal-panel h2 { margin: 0 0 6px; font-size: 18px; }
+.modal-panel .lead { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+.credit-item { padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.credit-item .cname { font-weight: 700; }
+.credit-item .cmeta { color: var(--muted); margin-top: 2px; }
+.credit-item a { word-break: break-all; font-size: 12px; }
+.modal-close {
+  float: right;
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.stack-empty {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  text-align: center;
+  padding: 20px;
+}
+.stack-empty.show { display: flex; }
+
+@media (max-height: 700px) {
+  .card-name { font-size: 17px; }
+  .round { width: 58px; height: 58px; }
+  .round.undo { width: 42px; height: 42px; }
+  .controls { padding: 10px 0 4px; gap: 12px; }
+}
+</style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="brand">
+        <span class="brand-super">SUPERCAR</span>
+        <span class="brand-or">SWIPE</span>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="btn-results">Results</button>
+        <button type="button" id="btn-credits">Credits</button>
+      </div>
+    </header>
+
+    <main id="swipe-screen">
+      <p class="hint" id="hint">Swipe <kbd class="not">left</kbd> not · <kbd class="super">right</kbd> supercar · <kbd class="hyper">up</kbd> hypercar. Arrow keys work too.</p>
+      <div class="stack-wrap">
+        <div id="stack" aria-live="polite"></div>
+      </div>
+      <div class="controls">
+        <button type="button" class="round undo" id="btn-undo" aria-label="Undo last swipe" title="Undo" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 8H5V4"/><path d="M5 8a8 8 0 1 1-1.2 6"/></svg>
+        </button>
+        <button type="button" class="round no" id="btn-no" aria-label="Not a supercar" title="Not a supercar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <button type="button" class="round hyper" id="btn-hyper" aria-label="It's a hypercar" title="Hypercar">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.62 6.15 6.68.7-5.05 4.56 1.4 6.55L12 17.7l-5.65 3.26 1.4-6.55L2.7 9.35l6.68-.7L12 2.5z"/></svg>
+        </button>
+        <button type="button" class="round yes" id="btn-yes" aria-label="It's a supercar" title="Supercar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l5 5 9-10"/></svg>
+        </button>
+      </div>
+      <p class="progress"><span id="progress">1 / 195</span></p>
+    </main>
+
+    <section id="results-screen" aria-label="Your results">
+      <div class="results-head">
+        <h1>Your verdicts</h1>
+        <p class="results-summary" id="results-summary"></p>
+        <p class="community-note">Community totals are live votes. A car needs at least 5 votes before a percentage is shown.</p>
+        <div class="filter-bar" id="filter-bar" role="tablist" aria-label="Filter by your vote">
+          <button type="button" class="chip active" data-filter="all" data-label="All">All</button>
+          <button type="button" class="chip" data-filter="hyper" data-label="Hypercar">Hypercar</button>
+          <button type="button" class="chip" data-filter="super" data-label="Supercar">Supercar</button>
+          <button type="button" class="chip" data-filter="not" data-label="Not">Not</button>
+        </div>
+      </div>
+      <div class="results-list" id="results-list"></div>
+      <div class="results-actions">
+        <button type="button" class="secondary" id="btn-keep-swiping">Keep swiping</button>
+        <button type="button" class="primary" id="btn-play-again">Play again</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal" id="credits-modal" role="dialog" aria-modal="true" aria-labelledby="credits-title">
+    <div class="modal-panel">
+      <button type="button" class="modal-close" data-close aria-label="Close">Close</button>
+      <h2 id="credits-title">Photo credits</h2>
+      <p class="lead">Photographs are from Wikimedia Commons under their stated free licenses, resized for this app. Cars without a suitable freely licensed photo use a typographic placeholder. Click a link for the original file page.</p>
+      <div class="credit-item"><div class="cname">Acura Integra Type R</div><div class="cmeta">Photo: Jacob Frey 4A · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Acura_Integra_Type_R_black.jpg" target="_blank" rel="noopener noreferrer">Acura Integra Type R black.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Acura NSX Type S</div><div class="cmeta">Photo: Kevauto · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Acura_NSX_Type_S,_front_5.4.25.jpg" target="_blank" rel="noopener noreferrer">2022 Acura NSX Type S, front 5.4.25.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Acura RSX Type-S</div><div class="cmeta">Photo: Matt · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Acura_RSX_Type_S.jpg" target="_blank" rel="noopener noreferrer">Acura RSX Type S.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Alfa Romeo 4C / 4C Spider</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Alfa_Romeo_4C_Coup%C3%A9_IMG_7312.jpg" target="_blank" rel="noopener noreferrer">Alfa Romeo 4C Coupé IMG 7312.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Audi RS 5 Coupe</div><div class="cmeta">Photo: Vauxford · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2017_Audi_RS_5_Coupe_Front.jpg" target="_blank" rel="noopener noreferrer">2017 Audi RS 5 Coupe Front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Audi TT RS</div><div class="cmeta">Photo: Artaxerxes · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Audi_TT_RS_Main_Street_downtown_Montpelier_VT_November_2017.jpg" target="_blank" rel="noopener noreferrer">Audi TT RS Main Street downtown Montpelier VT November 2017.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW 1 Series M Coupe</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2011_BMW_1_Series_M_Coupe_Orange_BS_O24.jpg" target="_blank" rel="noopener noreferrer">2011 BMW 1 Series M Coupe Orange BS O24.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW i8</div><div class="cmeta">Photo: Vauxford · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2016_BMW_i8.jpg" target="_blank" rel="noopener noreferrer">2016 BMW i8.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW M2 CS</div><div class="cmeta">Photo: Aethonatic · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:BMW_M2_CS_(M200_RMF)_-_7_June_2026.jpg" target="_blank" rel="noopener noreferrer">BMW M2 CS (M200 RMF) - 7 June 2026.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW M3 Coupe (E92)</div><div class="cmeta">Photo: Navigator84 · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:BMW_M3_E92_China_2012-04-15.jpg" target="_blank" rel="noopener noreferrer">BMW M3 E92 China 2012-04-15.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW M4 CS</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:BMW_M4_CS_(G82)_VR46_Edition_IAA_2025_DSC_1308.jpg" target="_blank" rel="noopener noreferrer">BMW M4 CS (G82) VR46 Edition IAA 2025 DSC 1308.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW M6 Competition</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2017_BMW_M6_Auto_2.jpg" target="_blank" rel="noopener noreferrer">2017 BMW M6 Auto 2.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW M8 Competition</div><div class="cmeta">Photo: Kidfly182 · CC BY 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:BMW_M8_Competition_2024.jpg" target="_blank" rel="noopener noreferrer">BMW M8 Competition 2024.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW Z3 M Coupe / M Roadster</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1999_BMW_Z3_M_Coupe_Blue.jpg" target="_blank" rel="noopener noreferrer">1999 BMW Z3 M Coupe Blue.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW Z4 M40i</div><div class="cmeta">Photo: Vauxford · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2019_BMW_Z4_M40i_Front.jpg" target="_blank" rel="noopener noreferrer">2019 BMW Z4 M40i Front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">BMW Z8</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2002_BMW_Z8_4.jpg" target="_blank" rel="noopener noreferrer">2002 BMW Z8 4.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Cadillac ATS-V Coupe</div><div class="cmeta">Photo: Zytonits · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Cadillac_ATS_-V_coupe_avant_(23855921054).jpg" target="_blank" rel="noopener noreferrer">Cadillac ATS -V coupe avant (23855921054).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Cadillac CTS-V Coupe</div><div class="cmeta">Photo: HJUdall · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:12_Cadillac_CTS-V_Coupe_Base.jpg" target="_blank" rel="noopener noreferrer">12 Cadillac CTS-V Coupe Base.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Cadillac XLR-V</div><div class="cmeta">Photo: MercurySable99 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2006_Cadillac_XLR-V,_front_left,_09-27-2025.jpg" target="_blank" rel="noopener noreferrer">2006 Cadillac XLR-V, front left, 09-27-2025.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Camaro ZL1</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2018_Chevrolet_Camaro_ZL1_1LE_SCD_24.jpg" target="_blank" rel="noopener noreferrer">2018 Chevrolet Camaro ZL1 1LE SCD 24.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette (C4)</div><div class="cmeta">Photo: Ermell · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Chevrolet_Corvette_C4_Kulmbach_17RM0343.jpg" target="_blank" rel="noopener noreferrer">Chevrolet Corvette C4 Kulmbach 17RM0343.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette ZR-1 (C4)</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1992_Chevrolet_Corvette_C4_ZR-1.jpg" target="_blank" rel="noopener noreferrer">1992 Chevrolet Corvette C4 ZR-1.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette (C5)</div><div class="cmeta">Photo: MercurySable99 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2004_Chevrolet_Corvette_coupe,_front_right,_07-21-2024.jpg" target="_blank" rel="noopener noreferrer">2004 Chevrolet Corvette coupe, front right, 07-21-2024.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette (C6)</div><div class="cmeta">Photo: Handelsgeselschaft · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Chevrolet_Corvette_C6,_Pau_2015.jpg" target="_blank" rel="noopener noreferrer">Chevrolet Corvette C6, Pau 2015.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette ZR1 (C6)</div><div class="cmeta">Photo: Rutger van der Maar · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Chevrolet_Corvette_ZR1_(C6)_front.jpg" target="_blank" rel="noopener noreferrer">Chevrolet Corvette ZR1 (C6) front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette (C7)</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Chevrolet_Corvette_C7_Stingray.jpg" target="_blank" rel="noopener noreferrer">Chevrolet Corvette C7 Stingray.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette ZR1 (C7)</div><div class="cmeta">Photo: OWS Photography · CC BY 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Chevrolet_Corvette_ZR1_(C7)_Washington_DC_Metro_Area,_USA.jpg" target="_blank" rel="noopener noreferrer">Chevrolet Corvette ZR1 (C7) Washington DC Metro Area, USA.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette Stingray (C8)</div><div class="cmeta">Photo: OWS Photography · CC BY 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Chevrolet_Corvette_Stingray_(C8)_Washington_DC_Metro_Area,_USA.jpg" target="_blank" rel="noopener noreferrer">Chevrolet Corvette Stingray (C8) Washington DC Metro Area, USA.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette ZR1 (C8)</div><div class="cmeta">Photo: This picture has been taken by Oleg Yunakov . Contact e-mail: yunakov gmail.com . Image can be used in accordance with the terms of the СС-BY-SA license. Other photos can be seen h · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Chevrolet_C8_Corvette_ZR1.jpg" target="_blank" rel="noopener noreferrer">2025 Chevrolet C8 Corvette ZR1.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chevrolet Corvette ZR1X (C8)</div><div class="cmeta">Photo: Mustang Joe · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:2026_Chevrolet_Corvette_ZR1X_(55105784670).jpg" target="_blank" rel="noopener noreferrer">2026 Chevrolet Corvette ZR1X (55105784670).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Chrysler Crossfire SRT-6</div><div class="cmeta">Photo: Tony Harrison · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Chrysler_Crossfire_SRT-6_Wheels_Day_2009.jpg" target="_blank" rel="noopener noreferrer">Chrysler Crossfire SRT-6 Wheels Day 2009.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Dodge Challenger SRT Demon 170</div><div class="cmeta">Photo: Xnatedawgx · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2023_Dodge_Challenger_SRT_Demon_170,_orange,_front_right_side,_Golden_Super_Cruise_2026-10-03.jpg" target="_blank" rel="noopener noreferrer">2023 Dodge Challenger SRT Demon 170, orange, front right side, Golden Super Cruise 2026-10-03.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Dodge Charger Daytona Scat Pack</div><div class="cmeta">Photo: HJUdall · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:25_Dodge_Charger_Daytona_Scat_Pack_EV.jpg" target="_blank" rel="noopener noreferrer">25 Dodge Charger Daytona Scat Pack EV.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Dodge Stealth R/T Twin Turbo</div><div class="cmeta">Photo: Elise240SX · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1991_Dodge_Stealth_RT_Twin_Turbo_in_Firestorm_Red,_Front_Left,_05-29-2022.jpg" target="_blank" rel="noopener noreferrer">1991 Dodge Stealth RT Twin Turbo in Firestorm Red, Front Left, 05-29-2022.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Dodge Viper ACR</div><div class="cmeta">Photo: MercurySable99 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2016_Dodge_Viper_ACR_with_Extreme_Aero_package,_front_left,_06-16-2024.jpg" target="_blank" rel="noopener noreferrer">2016 Dodge Viper ACR with Extreme Aero package, front left, 06-16-2024.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ford Mustang Shelby GT350 / GT350R</div><div class="cmeta">Photo: Xnatedawgx · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2016%E2%80%932020_Ford_Shelby_GT350R,_Golden_Super_Cruise_2026-09-05.jpg" target="_blank" rel="noopener noreferrer">2016–2020 Ford Shelby GT350R, Golden Super Cruise 2026-09-05.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ford Mustang Shelby GT500</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2021_Ford_Mustang_Shelby_GT500.jpg" target="_blank" rel="noopener noreferrer">2021 Ford Mustang Shelby GT500.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ford Mustang GTD</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Ford_Mustang_GTD_1.jpg" target="_blank" rel="noopener noreferrer">2024 Ford Mustang GTD 1.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Honda S2000 CR</div><div class="cmeta">Photo: IFCAR · Public domain</div><div><a href="https://commons.wikimedia.org/wiki/File:2008_Honda_S2000_CR.JPG" target="_blank" rel="noopener noreferrer">2008 Honda S2000 CR.JPG</a></div></div>
+        <div class="credit-item"><div class="cname">Hyundai Genesis Coupe 3.8 R-Spec</div><div class="cmeta">Photo: IFCAR · Public domain</div><div><a href="https://commons.wikimedia.org/wiki/File:2013_Hyundai_Genesis_Coupe_3.8_R-Spec_--_06-15-2012_1.JPG" target="_blank" rel="noopener noreferrer">2013 Hyundai Genesis Coupe 3.8 R-Spec -- 06-15-2012 1.JPG</a></div></div>
+        <div class="credit-item"><div class="cname">Infiniti Q60 Red Sport 400</div><div class="cmeta">Photo: Elise240SX · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2017_Infiniti_Q60_Red_Sport_400_AWD_in_Asgard_Grey,_front_right,_2024-10-02.jpg" target="_blank" rel="noopener noreferrer">2017 Infiniti Q60 Red Sport 400 AWD in Asgard Grey, front right, 2024-10-02.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Jaguar F-Type R 75</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Jaguar_F-Type_R_75.jpg" target="_blank" rel="noopener noreferrer">2024 Jaguar F-Type R 75.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Jaguar XKR-S</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2012_Jaguar_XKR-S_Auto.jpg" target="_blank" rel="noopener noreferrer">2012 Jaguar XKR-S Auto.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lexus LC 500</div><div class="cmeta">Photo: Ethan Llamas · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2023_Lexus_LC_500_in_White_Nova_Glass_Flake,_front_right.jpg" target="_blank" rel="noopener noreferrer">2023 Lexus LC 500 in White Nova Glass Flake, front right.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lexus RC F Final Edition</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lexus_RC_F_Final_Edition.jpg" target="_blank" rel="noopener noreferrer">Lexus RC F Final Edition.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mazda MX-5 Miata Club / RF Club</div><div class="cmeta">Photo: Yaktatel · Public domain</div><div><a href="https://commons.wikimedia.org/wiki/File:2021_Mazda_MX-5_Miata_RF_Club.jpg" target="_blank" rel="noopener noreferrer">2021 Mazda MX-5 Miata RF Club.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mazda RX-7</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1994_Mazda_RX-7_R2_in_Vintage_Red,_front_left_(Lime_Rock).jpg" target="_blank" rel="noopener noreferrer">1994 Mazda RX-7 R2 in Vintage Red, front left (Lime Rock).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz AMG C 63 S Coupe</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_C_63S_Coupe,_IAA_2017,_Frankfurt_(1Y7A3011).jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG C 63S Coupe, IAA 2017, Frankfurt (1Y7A3011).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz CLK 63 AMG Black Series</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2008_Mercedes-Benz_CLK_63_AMG_Black_Series_LC23.jpg" target="_blank" rel="noopener noreferrer">2008 Mercedes-Benz CLK 63 AMG Black Series LC23.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz AMG GT 63 S E Performance</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_C192_GT_63_S_E_Performance_IMG_9255.jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG C192 GT 63 S E Performance IMG 9255.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz AMG SL 63 S E Performance</div><div class="cmeta">Photo: Tokumeigakarinoaoshima · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_SL_63_S_E_Performance_(R232)_front.jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG SL 63 S E Performance (R232) front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz SLC 43 AMG</div><div class="cmeta">Photo: Zytonits · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-Benz_SLC_43_AMG_2_(32706611205).jpg" target="_blank" rel="noopener noreferrer">Mercedes-Benz SLC 43 AMG 2 (32706611205).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">MINI John Cooper Works Coupe / Roadster</div><div class="cmeta">Photo: IFCAR · Public domain</div><div><a href="https://commons.wikimedia.org/wiki/File:2012_Mini_John_Cooper_Works_Coupe_--_11-26-2011_front.jpg" target="_blank" rel="noopener noreferrer">2012 Mini John Cooper Works Coupe -- 11-26-2011 front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mitsubishi 3000GT VR-4</div><div class="cmeta">Photo: IFCAR · Public domain</div><div><a href="https://commons.wikimedia.org/wiki/File:Mitsubishi_3000GT_--_03-21-2012.JPG" target="_blank" rel="noopener noreferrer">Mitsubishi 3000GT -- 03-21-2012.JPG</a></div></div>
+        <div class="credit-item"><div class="cname">Nissan GT-R NISMO</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Nissan_GT-R_Nismo_SCD24.jpg" target="_blank" rel="noopener noreferrer">2022 Nissan GT-R Nismo SCD24.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Nissan Z NISMO</div><div class="cmeta">Photo: Oleg Yunakov · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Nissan_Z_NISMO_-_01.jpg" target="_blank" rel="noopener noreferrer">2025 Nissan Z NISMO - 01.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Plymouth Prowler</div><div class="cmeta">Photo: Elise240SX · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2000_Plymouth_Prowler_in_Prowler_Black_Clearcoat,_Front_Right,_06-10-2023.jpg" target="_blank" rel="noopener noreferrer">2000 Plymouth Prowler in Prowler Black Clearcoat, Front Right, 06-10-2023.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Polestar Polestar 1</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2021_Polestar_1_in_Magnesium,_front_left.jpg" target="_blank" rel="noopener noreferrer">2021 Polestar 1 in Magnesium, front left.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Pontiac Firebird Trans Am WS6</div><div class="cmeta">Photo: Jeremy from Sydney, Australia · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2000_Pontiac_Firebird_Trans_Am_WS6_(23974293013).jpg" target="_blank" rel="noopener noreferrer">2000 Pontiac Firebird Trans Am WS6 (23974293013).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Pontiac GTO</div><div class="cmeta">Photo: MercurySable99 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2006_Pontiac_GTO,_front_left,_08-24-2024.jpg" target="_blank" rel="noopener noreferrer">2006 Pontiac GTO, front left, 08-24-2024.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 718 Cayman GT4 RS / Spyder RS</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Porsche_718_Cayman_GT4_RS_Weissach.jpg" target="_blank" rel="noopener noreferrer">2022 Porsche 718 Cayman GT4 RS Weissach.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 911 Carrera</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Porsche_992_Carrera_convertible_DSC_7026.jpg" target="_blank" rel="noopener noreferrer">2025 Porsche 992 Carrera convertible DSC 7026.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 911 GT3 RS</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Porsche_911_GT3_RS_(2022)_1X7A7164.jpg" target="_blank" rel="noopener noreferrer">Porsche 911 GT3 RS (2022) 1X7A7164.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 911 Turbo S</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Porsche_992_Turbo_S_coupes_IAA_2025_DSC_1835.jpg" target="_blank" rel="noopener noreferrer">2025 Porsche 992 Turbo S coupes IAA 2025 DSC 1835.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 928 GTS</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1993_Porsche_928_GTS_Auto.jpg" target="_blank" rel="noopener noreferrer">1993 Porsche 928 GTS Auto.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 944 Turbo</div><div class="cmeta">Photo: Bull-Doser · Public domain</div><div><a href="https://commons.wikimedia.org/wiki/File:%2786-%2791_Porsche_944_Coupe_Turbo.JPG" target="_blank" rel="noopener noreferrer">&#x27;86-&#x27;91 Porsche 944 Coupe Turbo.JPG</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 968</div><div class="cmeta">Photo: Bretbmorgan · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1994_Porsche_968.jpg" target="_blank" rel="noopener noreferrer">1994 Porsche 968.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Saturn Sky Red Line</div><div class="cmeta">Photo: Greg Gjerdingen from Willmar, USA · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2007_Saturn_Sky_Red_Line_(26912197702).jpg" target="_blank" rel="noopener noreferrer">2007 Saturn Sky Red Line (26912197702).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Subaru BRZ tS</div><div class="cmeta">Photo: Charles from Port Chester, New York · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:Subaru_BRZ_tS_(2026)_(55213576339)_(cropped).jpg" target="_blank" rel="noopener noreferrer">Subaru BRZ tS (2026) (55213576339) (cropped).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Subaru SVX</div><div class="cmeta">Photo: Daniel Milner · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1992_Subaru_SVX_in_Maroon_-_Rear.jpg" target="_blank" rel="noopener noreferrer">1992 Subaru SVX in Maroon - Rear.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Tesla Roadster (first generation)</div><div class="cmeta">Photo: Ank Kumar · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Tesla_Roadster_(first_generation)_at_Chelsea_Auto_Legends_2012_(Ank_Kumar_01.jpg" target="_blank" rel="noopener noreferrer">Tesla Roadster (first generation) at Chelsea Auto Legends 2012 (Ank Kumar 01.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Toyota Celica GT-S</div><div class="cmeta">Photo: SevenSixty2 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2003_Toyota_Celica_GT-S_cropped.jpg" target="_blank" rel="noopener noreferrer">2003 Toyota Celica GT-S cropped.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Toyota GR86 Premium</div><div class="cmeta">Photo: Elise240SX · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Toyota_GR86_Premium_in_Halo,_Front_Right,_04-10-2022.jpg" target="_blank" rel="noopener noreferrer">2022 Toyota GR86 Premium in Halo, Front Right, 04-10-2022.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Toyota GR Supra Final Edition</div><div class="cmeta">Photo: Dietmar Rabich · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:D%C3%BClmen,_Auto_Bertels,_Toyota_GR_Supra_--_2021_--_9539.jpg" target="_blank" rel="noopener noreferrer">Dülmen, Auto Bertels, Toyota GR Supra -- 2021 -- 9539.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Toyota MR2 Spyder</div><div class="cmeta">Photo: Rutger van der Maar · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2001_Toyota_MR2_Spyder_USDM.jpg" target="_blank" rel="noopener noreferrer">2001 Toyota MR2 Spyder USDM.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Volkswagen Corrado SLC</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1992_Volkswagen_Corrado_VR6_1.jpg" target="_blank" rel="noopener noreferrer">1992 Volkswagen Corrado VR6 1.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Apollo Intensa Emozione</div><div class="cmeta">Photo: TaurusEmerald · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Apollo_Intensa_Emozione_Purple_Dragon_Petersen_Automotive_Museum.jpg" target="_blank" rel="noopener noreferrer">2022 Apollo Intensa Emozione Purple Dragon Petersen Automotive Museum.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Aston Martin One-77</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2011_Aston_Martin_One-77_SCD_24.jpg" target="_blank" rel="noopener noreferrer">2011 Aston Martin One-77 SCD 24.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Aston Martin Valhalla</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2026_Aston_Martin_Valhalla_SCD_26.jpg" target="_blank" rel="noopener noreferrer">2026 Aston Martin Valhalla SCD 26.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Aston Martin Valkyrie</div><div class="cmeta">Photo: MB-one · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Aston_Martin_Valkyrie,_EMS_2023,_Essen_(P1160761-RR).jpg" target="_blank" rel="noopener noreferrer">Aston Martin Valkyrie, EMS 2023, Essen (P1160761-RR).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Aston Martin Vanquish</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2014_Aston_Martin_Vanquish,_skyfall_silver.jpg" target="_blank" rel="noopener noreferrer">2014 Aston Martin Vanquish, skyfall silver.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Aston Martin Vantage S</div><div class="cmeta">Photo: Vauxford · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2013_Aston_Martin_V12_Vantage_S_Automatic_5.9.jpg" target="_blank" rel="noopener noreferrer">2013 Aston Martin V12 Vantage S Automatic 5.9.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Audi R8 GT</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2011_Audi_R8_GT_SCD_24.jpg" target="_blank" rel="noopener noreferrer">2011 Audi R8 GT SCD 24.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Bolide</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Bugatti_Bolide_3.jpg" target="_blank" rel="noopener noreferrer">2024 Bugatti Bolide 3.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Centodieci</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Bugatti_Centodieci_Low.jpg" target="_blank" rel="noopener noreferrer">2022 Bugatti Centodieci Low.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Chiron Super Sport</div><div class="cmeta">Photo: Dylan Johnson · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2020_Bugatti_Chiron_Super_Sport_300%2B_Prototype_Front.jpg" target="_blank" rel="noopener noreferrer">2020 Bugatti Chiron Super Sport 300+ Prototype Front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Divo</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Bugatti_Divo,_GIMS_2019,_Le_Grand-Saconnex_(GIMS0029).jpg" target="_blank" rel="noopener noreferrer">Bugatti Divo, GIMS 2019, Le Grand-Saconnex (GIMS0029).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti EB110 SS</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1993_Bugatti_EB110_SS_LC25.jpg" target="_blank" rel="noopener noreferrer">1993 Bugatti EB110 SS LC25.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Mistral</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Bugatti_Mistral_2.jpg" target="_blank" rel="noopener noreferrer">Bugatti Mistral 2.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Tourbillon</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Bugatti_Tourbillon_5.jpg" target="_blank" rel="noopener noreferrer">2024 Bugatti Tourbillon 5.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Bugatti Veyron Super Sport</div><div class="cmeta">Photo: Autoviva · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:BugattiVeyronSuperSport.jpg" target="_blank" rel="noopener noreferrer">BugattiVeyronSuperSport.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Czinger 21C</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Czinger_21C_2.jpg" target="_blank" rel="noopener noreferrer">2024 Czinger 21C 2.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 12Cilindri</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Ferrari_12Cilindri_in_Rosso_Imola,_front_left.jpg" target="_blank" rel="noopener noreferrer">2025 Ferrari 12Cilindri in Rosso Imola, front left.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 296 Speciale</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Ferrari_296_Speciale.jpg" target="_blank" rel="noopener noreferrer">2025 Ferrari 296 Speciale.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 348</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1992_Ferrari_348.jpg" target="_blank" rel="noopener noreferrer">1992 Ferrari 348.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 456</div><div class="cmeta">Photo: Thesupermat · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Paris_-_Bonhams_2014_-_Ferrari_456GT_modoficata_coup%C3%A9_-_2003_-_001.jpg" target="_blank" rel="noopener noreferrer">Paris - Bonhams 2014 - Ferrari 456GT modoficata coupé - 2003 - 001.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 458 Speciale</div><div class="cmeta">Photo: Handelsgeselschaft · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_458_Speciale,_2015_Tour_Auto,_Toulouse.jpg" target="_blank" rel="noopener noreferrer">Ferrari 458 Speciale, 2015 Tour Auto, Toulouse.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 488 Pista</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_488_Pista_Genf_2018.jpg" target="_blank" rel="noopener noreferrer">Ferrari 488 Pista Genf 2018.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 512 TR</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_512_TR,_Techno-Classica_2018,_Essen_(IMG_9219).jpg" target="_blank" rel="noopener noreferrer">Ferrari 512 TR, Techno-Classica 2018, Essen (IMG 9219).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 550 Maranello</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1998_Ferrari_550_Maranello.jpg" target="_blank" rel="noopener noreferrer">1998 Ferrari 550 Maranello.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 575M</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2002_Ferrari_575M.jpg" target="_blank" rel="noopener noreferrer">2002 Ferrari 575M.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 599 GTO</div><div class="cmeta">Photo: Handelsgeselschaft · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_599_GTO,_Pau_2015.jpg" target="_blank" rel="noopener noreferrer">Ferrari 599 GTO, Pau 2015.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 812 Competizione</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2023_Ferrari_812_Competizione_Aperta_2.jpg" target="_blank" rel="noopener noreferrer">2023 Ferrari 812 Competizione Aperta 2.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari California T</div><div class="cmeta">Photo: Dllu · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_California_T_right_side.jpg" target="_blank" rel="noopener noreferrer">Ferrari California T right side.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari Daytona SP3</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Ferrari_Daytona_SP3_rear.jpg" target="_blank" rel="noopener noreferrer">2024 Ferrari Daytona SP3 rear.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari Enzo</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:2004_Enzo_Ferrari_rear.jpg" target="_blank" rel="noopener noreferrer">2004 Enzo Ferrari rear.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari F12tdf</div><div class="cmeta">Photo: Tokumeigakarinoaoshima · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Osaka_Auto_Messe_2017_(320)_-_Ferrari_F12tdf_with_TWS_wheel.jpg" target="_blank" rel="noopener noreferrer">Osaka Auto Messe 2017 (320) - Ferrari F12tdf with TWS wheel.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari F355</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1995_Ferrari_F355_GTS.jpg" target="_blank" rel="noopener noreferrer">1995 Ferrari F355 GTS.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari F430 Scuderia</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2008_Ferrari_F430_Scuderia_3.jpg" target="_blank" rel="noopener noreferrer">2008 Ferrari F430 Scuderia 3.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari F50</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:1997_Ferrari_F50_front.jpg" target="_blank" rel="noopener noreferrer">1997 Ferrari F50 front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari F512 M</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1996_Ferrari_F512_M_in_Rosso_Corsa,_front_right.jpg" target="_blank" rel="noopener noreferrer">1996 Ferrari F512 M in Rosso Corsa, front right.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari F8 Tributo</div><div class="cmeta">Photo: Sam N · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2020_Ferrari_F8_Tributo_3.9.jpg" target="_blank" rel="noopener noreferrer">2020 Ferrari F8 Tributo 3.9.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari F80</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2025_Ferrari_F80.jpg" target="_blank" rel="noopener noreferrer">2025 Ferrari F80.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari F40</div><div class="cmeta">Photo: TTTNIS · CC0</div><div><a href="https://commons.wikimedia.org/wiki/File:1990_Ferrari_F40_front.jpg" target="_blank" rel="noopener noreferrer">1990 Ferrari F40 front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari LaFerrari</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ferrari_LaFerrari_GIMS_2024_1X7A2272.jpg" target="_blank" rel="noopener noreferrer">Ferrari LaFerrari GIMS 2024 1X7A2272.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari 360 Challenge Stradale</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2000_Ferrari_360_Challenge_Stradale.jpg" target="_blank" rel="noopener noreferrer">2000 Ferrari 360 Challenge Stradale.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari Monza SP1 / SP2</div><div class="cmeta">Photo: Thesupermat · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Festival_automobile_international_2019_-_Ferrari_Monza_SP1_-_005_(cropped).jpg" target="_blank" rel="noopener noreferrer">Festival automobile international 2019 - Ferrari Monza SP1 - 005 (cropped).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari Portofino M</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Ferrari_Portofino_M_(81524).jpg" target="_blank" rel="noopener noreferrer">2022 Ferrari Portofino M (81524).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari Roma</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2021_Ferrari_Roma_in_Rosso_Fiorano,_front_right.jpg" target="_blank" rel="noopener noreferrer">2021 Ferrari Roma in Rosso Fiorano, front right.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ferrari SF90 Stradale</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2021_Ferrari_SF90_Stradale_3.jpg" target="_blank" rel="noopener noreferrer">2021 Ferrari SF90 Stradale 3.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Ford GT</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Ford_GT_(2nd_generation)_coupes_IMG_0224.jpg" target="_blank" rel="noopener noreferrer">Ford GT (2nd generation) coupes IMG 0224.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Gordon Murray Automotive T.33</div><div class="cmeta">Photo: Calreyn88 · CC BY 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Gordon_Murray_Automotive_T33S_2025_2.jpg" target="_blank" rel="noopener noreferrer">Gordon Murray Automotive T33S 2025 2.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Gordon Murray Automotive T.50</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_Gordon_Murray_Automotive_T.50.jpg" target="_blank" rel="noopener noreferrer">2024 Gordon Murray Automotive T.50.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Hennessey Venom F5</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Hennessey_Venom_F5,_GIMS_2018,_Le_Grand-Saconnex_(1X7A1390).jpg" target="_blank" rel="noopener noreferrer">Hennessey Venom F5, GIMS 2018, Le Grand-Saconnex (1X7A1390).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Hennessey Venom GT</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2011_Hennessey_Venom_GT_in_Venom_Red,_front_right.jpg" target="_blank" rel="noopener noreferrer">2011 Hennessey Venom GT in Venom Red, front right.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Jaguar XJ220</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1992_Jaguar_XJ220.jpg" target="_blank" rel="noopener noreferrer">1992 Jaguar XJ220.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg Agera RS</div><div class="cmeta">Photo: Ank Kumar · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_Agera,_GIMS_2018_06.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg Agera, GIMS 2018 06.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg CC8S</div><div class="cmeta">Photo: Andrew Basterfield · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2003_Koenigsegg_CC8S_(35862871624).jpg" target="_blank" rel="noopener noreferrer">2003 Koenigsegg CC8S (35862871624).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg CC850</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_CC850_Auto_Zuerich_2025_DSC_3655.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg CC850 Auto Zuerich 2025 DSC 3655.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg CCR</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_CCR_2004.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg CCR 2004.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg CCX</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_CCX_2.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg CCX 2.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg Gemera</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_Gemera.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg Gemera.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg Jesko</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_Jesko_Auto_Zuerich_2023_1X7A0924.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg Jesko Auto Zuerich 2023 1X7A0924.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg One:1</div><div class="cmeta">Photo: Eduardo Parise / eduparise · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Koenigsegg_One-1_-_Gen%C3%A8ve_2014_-_01.jpg" target="_blank" rel="noopener noreferrer">Koenigsegg One-1 - Genève 2014 - 01.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Koenigsegg Regera</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2019_Koenigsegg_Regera_HCC23.jpg" target="_blank" rel="noopener noreferrer">2019 Koenigsegg Regera HCC23.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Aventador Ultimae</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Lamborghini_Aventador_Ultimae_LP780-4.jpg" target="_blank" rel="noopener noreferrer">2022 Lamborghini Aventador Ultimae LP780-4.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Centenario</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2016_Lamborghini_Centenario_LC25.jpg" target="_blank" rel="noopener noreferrer">2016 Lamborghini Centenario LC25.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Countach LPI 800-4</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Countach_LPI_800-4_IMG_8009.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Countach LPI 800-4 IMG 8009.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Diablo VT 6.0</div><div class="cmeta">Photo: Ank Kumar · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2000_Lamborghini_Diablo_VT_6.0_at_Chelsea_Auto_Legends_2012_(Ank_Kumar).jpg" target="_blank" rel="noopener noreferrer">2000 Lamborghini Diablo VT 6.0 at Chelsea Auto Legends 2012 (Ank Kumar).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Gallardo LP 570-4 Superleggera</div><div class="cmeta">Photo: easylocum from Gourock, United Kingdom · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Gallardo_LP_570-4_Superleggera_-_easylocum.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Gallardo LP 570-4 Superleggera - easylocum.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Huracán STO</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Hurac%C3%A1n_STO_IMG_9892.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Huracán STO IMG 9892.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Murciélago LP 670-4 SV</div><div class="cmeta">Photo: Aero777 · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Murci%C3%A9lago_LP_670%E2%80%934_SuperVeloce_at_Sepang_International_Circuit,_Malaysia.JPG" target="_blank" rel="noopener noreferrer">Lamborghini Murciélago LP 670–4 SuperVeloce at Sepang International Circuit, Malaysia.JPG</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Reventón</div><div class="cmeta">Photo: Taco Ekkel from Amsterdam · CC BY-SA 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Revent%C3%B3n.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Reventón.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Revuelto</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Revuelto_DSC_6985.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Revuelto DSC 6985.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Sián</div><div class="cmeta">Photo: Johannes Maximilian · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Si%C3%A1n_IAA_2019_JM_1094.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Sián IAA 2019 JM 1094.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Temerario</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lamborghini_Temerario_2025.jpg" target="_blank" rel="noopener noreferrer">Lamborghini Temerario 2025.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lamborghini Veneno</div><div class="cmeta">Photo: Clément Bucco-Lechat · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Geneva_MotorShow_2013_-_Lamborghini_Veneno_1.jpg" target="_blank" rel="noopener noreferrer">Geneva MotorShow 2013 - Lamborghini Veneno 1.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lexus LFA</div><div class="cmeta">Photo: Tennen-Gas · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lexus_LFA_001.JPG" target="_blank" rel="noopener noreferrer">Lexus LFA 001.JPG</a></div></div>
+        <div class="credit-item"><div class="cname">Lotus Elise SC Final Edition</div><div class="cmeta">Photo: Thierry &amp; Didier Descouens · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:(Series_2)_Lotus_Elise_(type_111)_version_SC_(SuperCharged)_2009.jpg" target="_blank" rel="noopener noreferrer">(Series 2) Lotus Elise (type 111) version SC (SuperCharged) 2009.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lotus Emira 420 Sport</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lotus_Emira_420_Sport_Auto_Zuerich_2026_IMG_8828.jpg" target="_blank" rel="noopener noreferrer">Lotus Emira 420 Sport Auto Zuerich 2026 IMG 8828.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lotus Esprit V8</div><div class="cmeta">Photo: Bmwe36v8 · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1997_Lotus_Esprit_V8.jpg" target="_blank" rel="noopener noreferrer">1997 Lotus Esprit V8.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lotus Evija</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lotus_Evija_MYLE_Festival_2025_DSC_9429.jpg" target="_blank" rel="noopener noreferrer">Lotus Evija MYLE Festival 2025 DSC 9429.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lotus Evora GT</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2020_Lotus_Evora_GT,_Monaco_White,_front_right.jpg" target="_blank" rel="noopener noreferrer">2020 Lotus Evora GT, Monaco White, front right.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Lotus Exige S260 Final Edition</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Lotus_Exige_11.jpg" target="_blank" rel="noopener noreferrer">Lotus Exige 11.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Maserati GranTurismo Folgore</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2023_Maserati_GranTurismo_Folgore.jpg" target="_blank" rel="noopener noreferrer">2023 Maserati GranTurismo Folgore.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Maserati MC12</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2004_Maserati_MC12_HCC23.jpg" target="_blank" rel="noopener noreferrer">2004 Maserati MC12 HCC23.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Maserati MCPura (MC20)</div><div class="cmeta">Photo: Turning67 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Maserati_MCPura_2026.jpg" target="_blank" rel="noopener noreferrer">Maserati MCPura 2026.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren 570S</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2017_McLaren_570S,_blue,_front_left.jpg" target="_blank" rel="noopener noreferrer">2017 McLaren 570S, blue, front left.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren 600LT</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_600LT_Spider,_GIMS_2019,_Le_Grand-Saconnex_(GIMS1233).jpg" target="_blank" rel="noopener noreferrer">McLaren 600LT Spider, GIMS 2019, Le Grand-Saconnex (GIMS1233).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren 650S</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_650S_Spider.jpg" target="_blank" rel="noopener noreferrer">McLaren 650S Spider.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren 675LT</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2015_McLaren_675LT_Grey.jpg" target="_blank" rel="noopener noreferrer">2015 McLaren 675LT Grey.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren 720S</div><div class="cmeta">Photo: Vauxford · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2018_McLaren_720S_V8_S-A_4.0.jpg" target="_blank" rel="noopener noreferrer">2018 McLaren 720S V8 S-A 4.0.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren 750S</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_McLaren_750S_4.jpg" target="_blank" rel="noopener noreferrer">2024 McLaren 750S 4.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren 765LT</div><div class="cmeta">Photo: Liam Walker · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2020_McLaren_765LT_4.0.jpg" target="_blank" rel="noopener noreferrer">2020 McLaren 765LT 4.0.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren Artura</div><div class="cmeta">Photo: Yu Chu Chin · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_Artura_at_the_2026_Adelaide_Rally_Street_Party_on_King_William_Road_(028A4067).jpg" target="_blank" rel="noopener noreferrer">McLaren Artura at the 2026 Adelaide Rally Street Party on King William Road (028A4067).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren F1</div><div class="cmeta">Photo: Chelsea Jay · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1996_McLaren_F1_Chassis_No_63_6.1_Front.jpg" target="_blank" rel="noopener noreferrer">1996 McLaren F1 Chassis No 63 6.1 Front.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren GT</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_McLaren_GT.jpg" target="_blank" rel="noopener noreferrer">2022 McLaren GT.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren MP4-12C</div><div class="cmeta">Photo: M 93 · CC BY-SA 3.0 de</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_MP4-12C_%E2%80%93_Frontansicht_(1),_30._August_2012,_D%C3%BCsseldorf.jpg" target="_blank" rel="noopener noreferrer">McLaren MP4-12C – Frontansicht (1), 30. August 2012, Düsseldorf.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren P1</div><div class="cmeta">Photo: Chelsea Jay · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2014_McLaren_P1_3.8.jpg" target="_blank" rel="noopener noreferrer">2014 McLaren P1 3.8.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren Senna</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_Senna,_GIMS_2018,_Le_Grand-Saconnex_(1X7A0404).jpg" target="_blank" rel="noopener noreferrer">McLaren Senna, GIMS 2018, Le Grand-Saconnex (1X7A0404).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren Speedtail</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:McLaren_Speedtail_Genf_2019_1Y7A5298.jpg" target="_blank" rel="noopener noreferrer">McLaren Speedtail Genf 2019 1Y7A5298.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">McLaren W1</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2024_McLaren_W1_SP25.jpg" target="_blank" rel="noopener noreferrer">2024 McLaren W1 SP25.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz AMG One</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Mercedes-AMG_One,_EMS_2024,_Essen_(P1032097).jpg" target="_blank" rel="noopener noreferrer">Mercedes-AMG One, EMS 2024, Essen (P1032097).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz CLK GTR</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1998_Mercedes-Benz_CLK_GTR_SP20.jpg" target="_blank" rel="noopener noreferrer">1998 Mercedes-Benz CLK GTR SP20.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz SLR McLaren 722</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2007_Mercedes-Benz_SLR_McLaren_722_LC25.jpg" target="_blank" rel="noopener noreferrer">2007 Mercedes-Benz SLR McLaren 722 LC25.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Mercedes-Benz SLS AMG Black Series</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2013_Mercedes-Benz_SLS_AMG_Black_Series_white.jpg" target="_blank" rel="noopener noreferrer">2013 Mercedes-Benz SLS AMG Black Series white.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Noble M12 GTO-3R</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Noble_M12_GTO-3R_in_Red,_front_right_(New_Canaan).jpg" target="_blank" rel="noopener noreferrer">Noble M12 GTO-3R in Red, front right (New Canaan).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Noble M600</div><div class="cmeta">Photo: Edvvc from London, UK · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2015_Noble_M600_51.33_seconds_(19705794269).jpg" target="_blank" rel="noopener noreferrer">2015 Noble M600 51.33 seconds (19705794269).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Pagani Huayra Roadster BC</div><div class="cmeta">Photo: Matti Blume · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Pagani_Huayra_BC_Roadster,_BAS_24,_Brussels_(P1170491-RR).jpg" target="_blank" rel="noopener noreferrer">Pagani Huayra BC Roadster, BAS 24, Brussels (P1170491-RR).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Pagani Utopia</div><div class="cmeta">Photo: Alexander-93 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Pagani_Utopia_Auto_Zuerich_2023_1X7A1183.jpg" target="_blank" rel="noopener noreferrer">Pagani Utopia Auto Zuerich 2023 1X7A1183.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Pagani Zonda F Clubsport</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Pagani_Zonda_F_Clubsport.jpg" target="_blank" rel="noopener noreferrer">Pagani Zonda F Clubsport.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Pininfarina Battista</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Pininfarina_Battista_in_Oro_Liquido_and_Nero_Torino,_front_right.jpg" target="_blank" rel="noopener noreferrer">2022 Pininfarina Battista in Oro Liquido and Nero Torino, front right.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 911 GT1 Straßenversion</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Porsche_911_GT1_Stra%C3%9Fenversion.jpg" target="_blank" rel="noopener noreferrer">Porsche 911 GT1 Straßenversion.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche 918 Spyder</div><div class="cmeta">Photo: Chelsea Jay · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2015_Porsche_918_Spyder_4.6.jpg" target="_blank" rel="noopener noreferrer">2015 Porsche 918 Spyder 4.6.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Porsche Carrera GT</div><div class="cmeta">Photo: Alexander Migl · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Porsche_Carrera_GT_Classic-Gala_2025_DSC_0837.jpg" target="_blank" rel="noopener noreferrer">Porsche Carrera GT Classic-Gala 2025 DSC 0837.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Rimac Concept_One</div><div class="cmeta">Photo: This picture has been taken by Oleg Yunakov . Contact e-mail: yunakov gmail.com . Image can be used in accordance with the terms of the СС-BY-SA license. Other photos can be seen h · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Rimac_Concept_One_-_01.jpg" target="_blank" rel="noopener noreferrer">Rimac Concept One - 01.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Rimac Nevera</div><div class="cmeta">Photo: MrWalkr · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Rimac_Nevera.jpg" target="_blank" rel="noopener noreferrer">Rimac Nevera.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Saleen S7 Twin Turbo</div><div class="cmeta">Photo: Valder137 · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:Saleen_S7_2007_Twin_Turbo_LFront_CECF_9April2011_(14597584781).jpg" target="_blank" rel="noopener noreferrer">Saleen S7 2007 Twin Turbo LFront CECF 9April2011 (14597584781).jpg</a></div></div>
+        <div class="credit-item"><div class="cname">SSC Tuatara</div><div class="cmeta">Photo: Mr.choppers · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_SSC_Tuatara_Striker_in_Silver,_front_right.jpg" target="_blank" rel="noopener noreferrer">2022 SSC Tuatara Striker in Silver, front right.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">SSC Ultimate Aero</div><div class="cmeta">Photo: Ank kumar · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:SSC_Ultimate_Aero,_London_01.jpg" target="_blank" rel="noopener noreferrer">SSC Ultimate Aero, London 01.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Spyker C8 Laviolette</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2009_Spyker_C8_Laviolette_Coupe.jpg" target="_blank" rel="noopener noreferrer">2009 Spyker C8 Laviolette Coupe.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Vector M12</div><div class="cmeta">Photo: Greg Gjerdingen · CC BY 2.0</div><div><a href="https://commons.wikimedia.org/wiki/File:98_Vector_M12.jpg" target="_blank" rel="noopener noreferrer">98 Vector M12.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Vector W8</div><div class="cmeta">Photo: Ank Kumar · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:1990_Vector_W8_Twin_Turbo_sports_car_(Ank_Kumar,_Infosys_Limited)_01.jpg" target="_blank" rel="noopener noreferrer">1990 Vector W8 Twin Turbo sports car (Ank Kumar, Infosys Limited) 01.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Zenvo ST1</div><div class="cmeta">Photo: Gaurang Patkar · CC BY-SA 3.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2009_Zenvo_ST1.jpg" target="_blank" rel="noopener noreferrer">2009 Zenvo ST1.jpg</a></div></div>
+        <div class="credit-item"><div class="cname">Zenvo TSR-S</div><div class="cmeta">Photo: Calreyn88 · CC BY-SA 4.0</div><div><a href="https://commons.wikimedia.org/wiki/File:2022_Zenvo_TSR-S_(18142).jpg" target="_blank" rel="noopener noreferrer">2022 Zenvo TSR-S (18142).jpg</a></div></div>
+    </div>
+  </div>
+
+  <script>
+    const CARS = [{"id":"acura-integra-type-r","name":"Acura Integra Type R","make":"Acura","model":"Integra Type R","years":"1997–1998, 2000–2001","spec":"1.8L I4, 195 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/acura-integra-type-r.jpg"},{"id":"acura-nsx-type-s","name":"Acura NSX Type S","make":"Acura","model":"NSX Type S","years":"2022","spec":"3.5L twin-turbo V6 hybrid, 600 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/acura-nsx-type-s.jpg"},{"id":"acura-rsx-type-s","name":"Acura RSX Type-S","make":"Acura","model":"RSX Type-S","years":"2002–2006","spec":"2.0L I4, 210 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/acura-rsx-type-s.jpg"},{"id":"alfa-4c","name":"Alfa Romeo 4C / 4C Spider","make":"Alfa Romeo","model":"4C / 4C Spider","years":"2015–2020","spec":"1.7L turbo I4, 237 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/alfa-4c.jpg"},{"id":"audi-rs5-coupe","name":"Audi RS 5 Coupe","make":"Audi","model":"RS 5 Coupe","years":"2018–2024","spec":"2.9L twin-turbo V6, 444 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/audi-rs5-coupe.jpg"},{"id":"audi-tt-rs","name":"Audi TT RS","make":"Audi","model":"TT RS","years":"2017–2022","spec":"2.5L turbo I5, 394 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/audi-tt-rs.jpg"},{"id":"bmw-1m","name":"BMW 1 Series M Coupe","make":"BMW","model":"1 Series M Coupe","years":"2011–2012","spec":"3.0L twin-turbo I6, 335 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/bmw-1m.jpg"},{"id":"bmw-i8","name":"BMW i8","make":"BMW","model":"i8","years":"2014–2020","spec":"1.5L turbo I3 plug-in hybrid, 369 hp","body":"Coupe / Roadster","status":"Discontinued","category":"Mainstream","image":"images/bmw-i8.jpg"},{"id":"bmw-m2-cs","name":"BMW M2 CS","make":"BMW","model":"M2 CS","years":"2026","spec":"3.0L twin-turbo I6, 523 hp","body":"Coupe","status":"Current","category":"Mainstream","image":"images/bmw-m2-cs.jpg"},{"id":"bmw-m3-coupe","name":"BMW M3 Coupe (E92)","make":"BMW","model":"M3 Coupe (E92)","years":"2008–2013","spec":"4.0L V8, 414 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/bmw-m3-coupe.jpg"},{"id":"bmw-m4-cs","name":"BMW M4 CS","make":"BMW","model":"M4 CS","years":"2025–2026","spec":"3.0L twin-turbo I6, 543 hp","body":"Coupe","status":"Current","category":"Mainstream","image":"images/bmw-m4-cs.jpg"},{"id":"bmw-m6-competition","name":"BMW M6 Competition","make":"BMW","model":"M6 Competition","years":"2016–2019","spec":"4.4L twin-turbo V8, 600 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/bmw-m6-competition.jpg"},{"id":"bmw-m8-competition","name":"BMW M8 Competition","make":"BMW","model":"M8 Competition","years":"2020–2025","spec":"4.4L twin-turbo V8, 617 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/bmw-m8-competition.jpg"},{"id":"bmw-z3-m","name":"BMW Z3 M Coupe / M Roadster","make":"BMW","model":"Z3 M Coupe / M Roadster","years":"1996–2002","spec":"3.2L I6, 315 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/bmw-z3-m.jpg"},{"id":"bmw-z4-m40i","name":"BMW Z4 M40i","make":"BMW","model":"Z4 M40i","years":"2019–2026","spec":"3.0L turbo I6, 382 hp","body":"Convertible","status":"Discontinued","category":"Mainstream","image":"images/bmw-z4-m40i.jpg"},{"id":"bmw-z8","name":"BMW Z8","make":"BMW","model":"Z8","years":"2000–2003","spec":"4.9L V8, 394 hp","body":"Convertible","status":"Discontinued","category":"Mainstream","image":"images/bmw-z8.jpg"},{"id":"cadillac-ats-v-coupe","name":"Cadillac ATS-V Coupe","make":"Cadillac","model":"ATS-V Coupe","years":"2016–2019","spec":"3.6L twin-turbo V6, 464 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/cadillac-ats-v-coupe.jpg"},{"id":"cadillac-cts-v-coupe","name":"Cadillac CTS-V Coupe","make":"Cadillac","model":"CTS-V Coupe","years":"2011–2014","spec":"6.2L supercharged V8, 556 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/cadillac-cts-v-coupe.jpg"},{"id":"cadillac-xlr-v","name":"Cadillac XLR-V","make":"Cadillac","model":"XLR-V","years":"2004–2009","spec":"4.4L supercharged V8, 443 hp","body":"Convertible","status":"Discontinued","category":"Mainstream","image":"images/cadillac-xlr-v.jpg"},{"id":"chevy-camaro-zl1","name":"Chevrolet Camaro ZL1","make":"Chevrolet","model":"Camaro ZL1","years":"2017–2024","spec":"6.2L supercharged V8, 650 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/chevy-camaro-zl1.jpg"},{"id":"chevy-corvette-c4","name":"Chevrolet Corvette (C4)","make":"Chevrolet","model":"Corvette (C4)","years":"1992–1996","spec":"5.7L V8, 300 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/chevy-corvette-c4.jpg"},{"id":"chevy-corvette-c4-zr1","name":"Chevrolet Corvette ZR-1 (C4)","make":"Chevrolet","model":"Corvette ZR-1 (C4)","years":"1990–1995","spec":"5.7L DOHC V8, 405 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/chevy-corvette-c4-zr1.jpg"},{"id":"chevy-corvette-c5","name":"Chevrolet Corvette (C5)","make":"Chevrolet","model":"Corvette (C5)","years":"2001–2004","spec":"5.7L V8, 350 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/chevy-corvette-c5.jpg"},{"id":"chevy-corvette-c6","name":"Chevrolet Corvette (C6)","make":"Chevrolet","model":"Corvette (C6)","years":"2008–2013","spec":"6.2L V8, 430 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/chevy-corvette-c6.jpg"},{"id":"chevy-corvette-c6-zr1","name":"Chevrolet Corvette ZR1 (C6)","make":"Chevrolet","model":"Corvette ZR1 (C6)","years":"2009–2013","spec":"6.2L supercharged V8, 638 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/chevy-corvette-c6-zr1.jpg"},{"id":"chevy-corvette-c7","name":"Chevrolet Corvette (C7)","make":"Chevrolet","model":"Corvette (C7)","years":"2014–2019","spec":"6.2L V8, 455 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/chevy-corvette-c7.jpg"},{"id":"chevy-corvette-c7-zr1","name":"Chevrolet Corvette ZR1 (C7)","make":"Chevrolet","model":"Corvette ZR1 (C7)","years":"2019","spec":"6.2L supercharged V8, 755 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/chevy-corvette-c7-zr1.jpg"},{"id":"chevy-corvette-c8","name":"Chevrolet Corvette Stingray (C8)","make":"Chevrolet","model":"Corvette Stingray (C8)","years":"2020–2026","spec":"6.2L V8, 490 hp","body":"Coupe / Convertible","status":"Current","category":"Mainstream","image":"images/chevy-corvette-c8.jpg"},{"id":"chevy-corvette-c8-zr1","name":"Chevrolet Corvette ZR1 (C8)","make":"Chevrolet","model":"Corvette ZR1 (C8)","years":"2025–2026","spec":"5.5L twin-turbo V8, 1,064 hp","body":"Coupe / Convertible","status":"Current","category":"Mainstream","image":"images/chevy-corvette-c8-zr1.jpg"},{"id":"chevy-corvette-zr1x","name":"Chevrolet Corvette ZR1X (C8)","make":"Chevrolet","model":"Corvette ZR1X (C8)","years":"2026","spec":"5.5L twin-turbo V8 + e-motor, 1,250 hp","body":"Coupe / Convertible","status":"Current","category":"Mainstream","image":"images/chevy-corvette-zr1x.jpg"},{"id":"chrysler-crossfire-srt6","name":"Chrysler Crossfire SRT-6","make":"Chrysler","model":"Crossfire SRT-6","years":"2004–2008","spec":"3.2L supercharged I6, 330 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/chrysler-crossfire-srt6.jpg"},{"id":"dodge-challenger-demon-170","name":"Dodge Challenger SRT Demon 170","make":"Dodge","model":"Challenger SRT Demon 170","years":"2023","spec":"6.2L supercharged V8, 1,025 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/dodge-challenger-demon-170.jpg"},{"id":"dodge-charger-daytona-scat-pack","name":"Dodge Charger Daytona Scat Pack","make":"Dodge","model":"Charger Daytona Scat Pack","years":"2025–2026","spec":"Dual-motor electric, 670 hp (PowerShot)","body":"Coupe","status":"Current","category":"Mainstream","image":"images/dodge-charger-daytona-scat-pack.jpg"},{"id":"dodge-stealth-rt-tt","name":"Dodge Stealth R/T Twin Turbo","make":"Dodge","model":"Stealth R/T Twin Turbo","years":"1991–1996","spec":"3.0L twin-turbo V6, 320 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/dodge-stealth-rt-tt.jpg"},{"id":"dodge-viper-acr","name":"Dodge Viper ACR","make":"Dodge","model":"Viper ACR","years":"2016–2017","spec":"8.4L V10, 645 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/dodge-viper-acr.jpg"},{"id":"ford-mustang-gt350","name":"Ford Mustang Shelby GT350 / GT350R","make":"Ford","model":"Mustang Shelby GT350 / GT350R","years":"2015–2020","spec":"5.2L V8, 526 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/ford-mustang-gt350.jpg"},{"id":"ford-mustang-gt500","name":"Ford Mustang Shelby GT500","make":"Ford","model":"Mustang Shelby GT500","years":"2020–2022","spec":"5.2L supercharged V8, 760 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/ford-mustang-gt500.jpg"},{"id":"ford-mustang-gtd","name":"Ford Mustang GTD","make":"Ford","model":"Mustang GTD","years":"2025–2026","spec":"5.2L supercharged V8, 815 hp","body":"Coupe","status":"Current","category":"Mainstream","image":"images/ford-mustang-gtd.jpg"},{"id":"honda-s2000-cr","name":"Honda S2000 CR","make":"Honda","model":"S2000 CR","years":"2008–2009","spec":"2.2L I4, 237 hp","body":"Convertible","status":"Discontinued","category":"Mainstream","image":"images/honda-s2000-cr.jpg"},{"id":"hyundai-genesis-coupe","name":"Hyundai Genesis Coupe 3.8 R-Spec","make":"Hyundai","model":"Genesis Coupe 3.8 R-Spec","years":"2013–2016","spec":"3.8L V6, 348 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/hyundai-genesis-coupe.jpg"},{"id":"infiniti-q60-red-sport","name":"Infiniti Q60 Red Sport 400","make":"Infiniti","model":"Q60 Red Sport 400","years":"2017–2022","spec":"3.0L twin-turbo V6, 400 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/infiniti-q60-red-sport.jpg"},{"id":"jaguar-f-type-r75","name":"Jaguar F-Type R 75","make":"Jaguar","model":"F-Type R 75","years":"2024","spec":"5.0L supercharged V8, 575 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/jaguar-f-type-r75.jpg"},{"id":"jaguar-xkr-s","name":"Jaguar XKR-S","make":"Jaguar","model":"XKR-S","years":"2012–2015","spec":"5.0L supercharged V8, 550 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/jaguar-xkr-s.jpg"},{"id":"lexus-lc-500","name":"Lexus LC 500","make":"Lexus","model":"LC 500","years":"2018–2026","spec":"5.0L V8, 471 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/lexus-lc-500.jpg"},{"id":"lexus-rc-f","name":"Lexus RC F Final Edition","make":"Lexus","model":"RC F Final Edition","years":"2025","spec":"5.0L V8, 472 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/lexus-rc-f.jpg"},{"id":"mazda-mx5-club","name":"Mazda MX-5 Miata Club / RF Club","make":"Mazda","model":"MX-5 Miata Club / RF Club","years":"2019–2026","spec":"2.0L I4, 181 hp","body":"Convertible / Retractable hardtop","status":"Current","category":"Mainstream","image":"images/mazda-mx5-club.jpg"},{"id":"mazda-rx7","name":"Mazda RX-7","make":"Mazda","model":"RX-7","years":"1993–1995","spec":"1.3L twin-turbo rotary, 255 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/mazda-rx7.jpg"},{"id":"mb-amg-c63s-coupe","name":"Mercedes-Benz AMG C 63 S Coupe","make":"Mercedes-Benz","model":"AMG C 63 S Coupe","years":"2017–2023","spec":"4.0L twin-turbo V8, 503 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/mb-amg-c63s-coupe.jpg"},{"id":"mb-clk63-black","name":"Mercedes-Benz CLK 63 AMG Black Series","make":"Mercedes-Benz","model":"CLK 63 AMG Black Series","years":"2008–2009","spec":"6.2L V8, 500 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/mb-clk63-black.jpg"},{"id":"mb-amg-gt-63s-e","name":"Mercedes-Benz AMG GT 63 S E Performance","make":"Mercedes-Benz","model":"AMG GT 63 S E Performance","years":"2025–2026","spec":"4.0L twin-turbo V8 PHEV, 805 hp","body":"Coupe","status":"Current","category":"Mainstream","image":"images/mb-amg-gt-63s-e.jpg"},{"id":"mb-sl-63s-e","name":"Mercedes-Benz AMG SL 63 S E Performance","make":"Mercedes-Benz","model":"AMG SL 63 S E Performance","years":"2024–2026","spec":"4.0L twin-turbo V8 PHEV, 805 hp","body":"Convertible","status":"Current","category":"Mainstream","image":"images/mb-sl-63s-e.jpg"},{"id":"mb-slc-43","name":"Mercedes-Benz SLC 43 AMG","make":"Mercedes-Benz","model":"SLC 43 AMG","years":"2017–2020","spec":"3.0L turbo I6, 362 hp","body":"Convertible","status":"Discontinued","category":"Mainstream","image":"images/mb-slc-43.jpg"},{"id":"mini-jcw-coupe","name":"MINI John Cooper Works Coupe / Roadster","make":"MINI","model":"John Cooper Works Coupe / Roadster","years":"2012–2015","spec":"1.6L turbo I4, 208 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/mini-jcw-coupe.jpg"},{"id":"mitsu-3000gt-vr4","name":"Mitsubishi 3000GT VR-4","make":"Mitsubishi","model":"3000GT VR-4","years":"1991–1999","spec":"3.0L twin-turbo V6, 320 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/mitsu-3000gt-vr4.jpg"},{"id":"nissan-gtr-nismo","name":"Nissan GT-R NISMO","make":"Nissan","model":"GT-R NISMO","years":"2015–2024","spec":"3.8L twin-turbo V6, 600 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/nissan-gtr-nismo.jpg"},{"id":"nissan-z-nismo","name":"Nissan Z NISMO","make":"Nissan","model":"Z NISMO","years":"2024–2026","spec":"3.0L twin-turbo V6, 420 hp","body":"Coupe","status":"Current","category":"Mainstream","image":"images/nissan-z-nismo.jpg"},{"id":"plymouth-prowler","name":"Plymouth Prowler","make":"Plymouth","model":"Prowler","years":"1997–2002","spec":"3.5L V6, 253 hp","body":"Convertible","status":"Discontinued","category":"Mainstream","image":"images/plymouth-prowler.jpg"},{"id":"polestar-1","name":"Polestar Polestar 1","make":"Polestar","model":"Polestar 1","years":"2020–2021","spec":"2.0L PHEV I4, 619 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/polestar-1.jpg"},{"id":"pontiac-firebird-ws6","name":"Pontiac Firebird Trans Am WS6","make":"Pontiac","model":"Firebird Trans Am WS6","years":"1998–2002","spec":"5.7L V8, 325 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/pontiac-firebird-ws6.jpg"},{"id":"pontiac-gto","name":"Pontiac GTO","make":"Pontiac","model":"GTO","years":"2004–2006","spec":"6.0L V8, 400 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/pontiac-gto.jpg"},{"id":"porsche-718-gt4-rs","name":"Porsche 718 Cayman GT4 RS / Spyder RS","make":"Porsche","model":"718 Cayman GT4 RS / Spyder RS","years":"2022–2025","spec":"4.0L flat-6, 493 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/porsche-718-gt4-rs.jpg"},{"id":"porsche-911-carrera","name":"Porsche 911 Carrera","make":"Porsche","model":"911 Carrera","years":"2025–2026","spec":"3.0L twin-turbo flat-6, 388 hp","body":"Coupe / Cabriolet","status":"Current","category":"Mainstream","image":"images/porsche-911-carrera.jpg"},{"id":"porsche-911-gt3-rs","name":"Porsche 911 GT3 RS","make":"Porsche","model":"911 GT3 RS","years":"2023–2026","spec":"4.0L flat-6, 518 hp","body":"Coupe","status":"Current","category":"Mainstream","image":"images/porsche-911-gt3-rs.jpg"},{"id":"porsche-911-turbo-s","name":"Porsche 911 Turbo S","make":"Porsche","model":"911 Turbo S","years":"2026","spec":"3.6L twin-turbo flat-6 T-Hybrid, 701 hp","body":"Coupe / Cabriolet / Targa","status":"Current","category":"Mainstream","image":"images/porsche-911-turbo-s.jpg"},{"id":"porsche-928-gts","name":"Porsche 928 GTS","make":"Porsche","model":"928 GTS","years":"1990–1995","spec":"5.4L V8, 345 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/porsche-928-gts.jpg"},{"id":"porsche-944-turbo","name":"Porsche 944 Turbo","make":"Porsche","model":"944 Turbo","years":"1990–1991","spec":"2.5L turbo I4, 247 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/porsche-944-turbo.jpg"},{"id":"porsche-968","name":"Porsche 968","make":"Porsche","model":"968","years":"1992–1995","spec":"3.0L I4, 236 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/porsche-968.jpg"},{"id":"saturn-sky-redline","name":"Saturn Sky Red Line","make":"Saturn","model":"Sky Red Line","years":"2007–2010","spec":"2.0L turbo I4, 260 hp","body":"Convertible","status":"Discontinued","category":"Mainstream","image":"images/saturn-sky-redline.jpg"},{"id":"subaru-brz-ts","name":"Subaru BRZ tS","make":"Subaru","model":"BRZ tS","years":"2024–2026","spec":"2.4L boxer-4, 228 hp","body":"Coupe","status":"Current","category":"Mainstream","image":"images/subaru-brz-ts.jpg"},{"id":"subaru-svx","name":"Subaru SVX","make":"Subaru","model":"SVX","years":"1992–1997","spec":"3.3L boxer-6, 230 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/subaru-svx.jpg"},{"id":"tesla-roadster","name":"Tesla Roadster (first generation)","make":"Tesla","model":"Roadster (first generation)","years":"2008–2012","spec":"Electric, 288 hp","body":"Convertible","status":"Discontinued","category":"Mainstream","image":"images/tesla-roadster.jpg"},{"id":"toyota-celica-gts","name":"Toyota Celica GT-S","make":"Toyota","model":"Celica GT-S","years":"2000–2005","spec":"1.8L I4, 180 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/toyota-celica-gts.jpg"},{"id":"toyota-gr86-premium","name":"Toyota GR86 Premium","make":"Toyota","model":"GR86 Premium","years":"2022–2026","spec":"2.4L boxer-4, 228 hp","body":"Coupe","status":"Current","category":"Mainstream","image":"images/toyota-gr86-premium.jpg"},{"id":"toyota-gr-supra","name":"Toyota GR Supra Final Edition","make":"Toyota","model":"GR Supra Final Edition","years":"2026","spec":"3.0L turbo I6, 382 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/toyota-gr-supra.jpg"},{"id":"toyota-mr2-spyder","name":"Toyota MR2 Spyder","make":"Toyota","model":"MR2 Spyder","years":"2000–2005","spec":"1.8L I4, 138 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Mainstream","image":"images/toyota-mr2-spyder.jpg"},{"id":"vw-corrado-slc","name":"Volkswagen Corrado SLC","make":"Volkswagen","model":"Corrado SLC","years":"1990–1994","spec":"2.8L VR6, 178 hp","body":"Coupe","status":"Discontinued","category":"Mainstream","image":"images/vw-corrado-slc.jpg"},{"id":"apollo-ie","name":"Apollo Intensa Emozione","make":"Apollo","model":"Intensa Emozione","years":"2019–2022","spec":"6.3L V12, 780 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/apollo-ie.jpg"},{"id":"aston-one-77","name":"Aston Martin One-77","make":"Aston Martin","model":"One-77","years":"2009–2012","spec":"7.3L V12, 750 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/aston-one-77.jpg"},{"id":"aston-valhalla","name":"Aston Martin Valhalla","make":"Aston Martin","model":"Valhalla","years":"2026","spec":"4.0L twin-turbo V8 hybrid, 1,064 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/aston-valhalla.jpg"},{"id":"aston-valkyrie","name":"Aston Martin Valkyrie","make":"Aston Martin","model":"Valkyrie","years":"2022–2025","spec":"6.5L V12 hybrid, 1,139 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/aston-valkyrie.jpg"},{"id":"aston-vanquish","name":"Aston Martin Vanquish","make":"Aston Martin","model":"Vanquish","years":"2001–2007, 2012–2018, 2025–2026","spec":"5.2L twin-turbo V12, 824 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/aston-vanquish.jpg"},{"id":"aston-vantage-s","name":"Aston Martin Vantage S","make":"Aston Martin","model":"Vantage S","years":"2006–2023, 2025–2026","spec":"4.0L twin-turbo V8, 671 hp","body":"Coupe / Convertible","status":"Current","category":"Exotic","image":"images/aston-vantage-s.jpg"},{"id":"audi-r8-gt","name":"Audi R8 GT","make":"Audi","model":"R8 GT","years":"2008–2023","spec":"5.2L V10, 602 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/audi-r8-gt.jpg"},{"id":"bugatti-bolide","name":"Bugatti Bolide","make":"Bugatti","model":"Bolide","years":"2024–2025","spec":"8.0L quad-turbo W16, 1,600 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/bugatti-bolide.jpg"},{"id":"bugatti-centodieci","name":"Bugatti Centodieci","make":"Bugatti","model":"Centodieci","years":"2022","spec":"8.0L quad-turbo W16, 1,577 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/bugatti-centodieci.jpg"},{"id":"bugatti-chiron-ss","name":"Bugatti Chiron Super Sport","make":"Bugatti","model":"Chiron Super Sport","years":"2016–2024","spec":"8.0L quad-turbo W16, 1,577 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/bugatti-chiron-ss.jpg"},{"id":"bugatti-divo","name":"Bugatti Divo","make":"Bugatti","model":"Divo","years":"2019–2021","spec":"8.0L quad-turbo W16, 1,479 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/bugatti-divo.jpg"},{"id":"bugatti-eb110","name":"Bugatti EB110 SS","make":"Bugatti","model":"EB110 SS","years":"1991–1995","spec":"3.5L quad-turbo V12, 603 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/bugatti-eb110.jpg"},{"id":"bugatti-mistral","name":"Bugatti Mistral","make":"Bugatti","model":"Mistral","years":"2024–2026","spec":"8.0L quad-turbo W16, 1,578 hp","body":"Convertible","status":"Current","category":"Exotic","image":"images/bugatti-mistral.jpg"},{"id":"bugatti-tourbillon","name":"Bugatti Tourbillon","make":"Bugatti","model":"Tourbillon","years":"2026","spec":"8.3L V16 hybrid, 1,800 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/bugatti-tourbillon.jpg"},{"id":"bugatti-veyron","name":"Bugatti Veyron Super Sport","make":"Bugatti","model":"Veyron Super Sport","years":"2005–2015","spec":"8.0L quad-turbo W16, 1,200 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/bugatti-veyron.jpg"},{"id":"czinger-21c","name":"Czinger 21C","make":"Czinger","model":"21C","years":"2024–2026","spec":"twin-turbo V8 hybrid, 1,250 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/czinger-21c.jpg"},{"id":"ferrari-12cilindri","name":"Ferrari 12Cilindri","make":"Ferrari","model":"12Cilindri","years":"2025–2026","spec":"6.5L V12, 819 hp","body":"Coupe / Spider","status":"Current","category":"Exotic","image":"images/ferrari-12cilindri.jpg"},{"id":"ferrari-296-speciale","name":"Ferrari 296 Speciale","make":"Ferrari","model":"296 Speciale","years":"2025–2026","spec":"3.0L V6 plug-in hybrid, 868 hp","body":"Coupe / Spider","status":"Current","category":"Exotic","image":"images/ferrari-296-speciale.jpg"},{"id":"ferrari-348","name":"Ferrari 348","make":"Ferrari","model":"348","years":"1990–1995","spec":"3.4L V8, 312 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-348.jpg"},{"id":"ferrari-456","name":"Ferrari 456","make":"Ferrari","model":"456","years":"1995–2003","spec":"5.5L V12, 442 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/ferrari-456.jpg"},{"id":"ferrari-458-speciale","name":"Ferrari 458 Speciale","make":"Ferrari","model":"458 Speciale","years":"2014–2015","spec":"4.5L V8, 597 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-458-speciale.jpg"},{"id":"ferrari-488-pista","name":"Ferrari 488 Pista","make":"Ferrari","model":"488 Pista","years":"2018–2019","spec":"3.9L twin-turbo V8, 710 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-488-pista.jpg"},{"id":"ferrari-512tr","name":"Ferrari 512 TR","make":"Ferrari","model":"512 TR","years":"1992–1994","spec":"4.9L flat-12, 421 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/ferrari-512tr.jpg"},{"id":"ferrari-550","name":"Ferrari 550 Maranello","make":"Ferrari","model":"550 Maranello","years":"1996–2001","spec":"5.5L V12, 485 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-550.jpg"},{"id":"ferrari-575m","name":"Ferrari 575M","make":"Ferrari","model":"575M","years":"2002–2006","spec":"5.7L V12, 515 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-575m.jpg"},{"id":"ferrari-599","name":"Ferrari 599 GTO","make":"Ferrari","model":"599 GTO","years":"2010–2012","spec":"6.0L V12, 661 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/ferrari-599.jpg"},{"id":"ferrari-812","name":"Ferrari 812 Competizione","make":"Ferrari","model":"812 Competizione","years":"2022–2024","spec":"6.5L V12, 819 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-812.jpg"},{"id":"ferrari-california","name":"Ferrari California T","make":"Ferrari","model":"California T","years":"2014–2017","spec":"3.9L twin-turbo V8, 552 hp","body":"Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-california.jpg"},{"id":"ferrari-daytona-sp3","name":"Ferrari Daytona SP3","make":"Ferrari","model":"Daytona SP3","years":"2022–2024","spec":"6.5L V12, 829 hp","body":"Targa","status":"Discontinued","category":"Exotic","image":"images/ferrari-daytona-sp3.jpg"},{"id":"ferrari-enzo","name":"Ferrari Enzo","make":"Ferrari","model":"Enzo","years":"2003–2004","spec":"6.0L V12, 651 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/ferrari-enzo.jpg"},{"id":"ferrari-f12","name":"Ferrari F12tdf","make":"Ferrari","model":"F12tdf","years":"2016–2017","spec":"6.3L V12, 769 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/ferrari-f12.jpg"},{"id":"ferrari-f355","name":"Ferrari F355","make":"Ferrari","model":"F355","years":"1995–1999","spec":"3.5L V8, 375 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-f355.jpg"},{"id":"ferrari-f430-scuderia","name":"Ferrari F430 Scuderia","make":"Ferrari","model":"F430 Scuderia","years":"2008–2009","spec":"4.3L V8, 503 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-f430-scuderia.jpg"},{"id":"ferrari-f50","name":"Ferrari F50","make":"Ferrari","model":"F50","years":"1995–1997","spec":"4.7L V12, 513 hp","body":"Targa","status":"Discontinued","category":"Exotic","image":"images/ferrari-f50.jpg"},{"id":"ferrari-f512m","name":"Ferrari F512 M","make":"Ferrari","model":"F512 M","years":"1995–1996","spec":"4.9L flat-12, 440 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/ferrari-f512m.jpg"},{"id":"ferrari-f8","name":"Ferrari F8 Tributo","make":"Ferrari","model":"F8 Tributo","years":"2020–2023","spec":"3.9L twin-turbo V8, 710 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-f8.jpg"},{"id":"ferrari-f80","name":"Ferrari F80","make":"Ferrari","model":"F80","years":"2025–2026","spec":"V6 plug-in hybrid, 1,184 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/ferrari-f80.jpg"},{"id":"ferrari-f40","name":"Ferrari F40","make":"Ferrari","model":"F40","years":"1990–1992","spec":"2.9L twin-turbo V8, 478 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/ferrari-f40.jpg"},{"id":"ferrari-laferrari","name":"Ferrari LaFerrari","make":"Ferrari","model":"LaFerrari","years":"2014–2017","spec":"6.3L V12 hybrid, 950 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-laferrari.jpg"},{"id":"ferrari-360-cs","name":"Ferrari 360 Challenge Stradale","make":"Ferrari","model":"360 Challenge Stradale","years":"2003–2005","spec":"3.6L V8, 425 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-360-cs.jpg"},{"id":"ferrari-monza","name":"Ferrari Monza SP1 / SP2","make":"Ferrari","model":"Monza SP1 / SP2","years":"2019–2022","spec":"6.5L V12, 810 hp","body":"Barchetta","status":"Discontinued","category":"Exotic","image":"images/ferrari-monza.jpg"},{"id":"ferrari-portofino","name":"Ferrari Portofino M","make":"Ferrari","model":"Portofino M","years":"2021–2023","spec":"3.9L twin-turbo V8, 612 hp","body":"Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-portofino.jpg"},{"id":"ferrari-roma","name":"Ferrari Roma","make":"Ferrari","model":"Roma","years":"2020–2025","spec":"3.9L twin-turbo V8, 612 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-roma.jpg"},{"id":"ferrari-sf90","name":"Ferrari SF90 Stradale","make":"Ferrari","model":"SF90 Stradale","years":"2020–2025","spec":"4.0L V8 plug-in hybrid, 986 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/ferrari-sf90.jpg"},{"id":"ford-gt","name":"Ford GT","make":"Ford","model":"GT","years":"2017–2022","spec":"3.5L twin-turbo V6, 660 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/ford-gt.jpg"},{"id":"gma-t33","name":"Gordon Murray Automotive T.33","make":"Gordon Murray Automotive","model":"T.33","years":"2025–2026","spec":"3.9L V12, 607 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/gma-t33.jpg"},{"id":"gma-t50","name":"Gordon Murray Automotive T.50","make":"Gordon Murray Automotive","model":"T.50","years":"2023–2026","spec":"4.0L V12, 654 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/gma-t50.jpg"},{"id":"hennessey-venom-f5","name":"Hennessey Venom F5","make":"Hennessey","model":"Venom F5","years":"2021–2026","spec":"6.6L twin-turbo V8, 1,817 hp","body":"Coupe / Convertible","status":"Current","category":"Exotic","image":"images/hennessey-venom-f5.jpg"},{"id":"hennessey-venom-gt","name":"Hennessey Venom GT","make":"Hennessey","model":"Venom GT","years":"2011–2017","spec":"twin-turbo V8, 1,200 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/hennessey-venom-gt.jpg"},{"id":"jaguar-xj220","name":"Jaguar XJ220","make":"Jaguar","model":"XJ220","years":"1992–1994","spec":"3.5L twin-turbo V6, 542 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/jaguar-xj220.jpg"},{"id":"koenigsegg-agera","name":"Koenigsegg Agera RS","make":"Koenigsegg","model":"Agera RS","years":"2015–2018","spec":"5.0L twin-turbo V8, 1,160 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/koenigsegg-agera.jpg"},{"id":"koenigsegg-cc8s","name":"Koenigsegg CC8S","make":"Koenigsegg","model":"CC8S","years":"2002–2003","spec":"4.7L supercharged V8, 655 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/koenigsegg-cc8s.jpg"},{"id":"koenigsegg-cc850","name":"Koenigsegg CC850","make":"Koenigsegg","model":"CC850","years":"2023–2026","spec":"5.0L twin-turbo V8, 1,185 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/koenigsegg-cc850.jpg"},{"id":"koenigsegg-ccr","name":"Koenigsegg CCR","make":"Koenigsegg","model":"CCR","years":"2004–2006","spec":"4.7L twin-supercharged V8, 806 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/koenigsegg-ccr.jpg"},{"id":"koenigsegg-ccx","name":"Koenigsegg CCX","make":"Koenigsegg","model":"CCX","years":"2006–2010","spec":"4.7L twin-supercharged V8, 806 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/koenigsegg-ccx.jpg"},{"id":"koenigsegg-gemera","name":"Koenigsegg Gemera","make":"Koenigsegg","model":"Gemera","years":"2026","spec":"5.0L twin-turbo V8 hybrid, 2,300 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/koenigsegg-gemera.jpg"},{"id":"koenigsegg-jesko","name":"Koenigsegg Jesko","make":"Koenigsegg","model":"Jesko","years":"2021–2026","spec":"5.0L twin-turbo V8, 1,280 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/koenigsegg-jesko.jpg"},{"id":"koenigsegg-one1","name":"Koenigsegg One:1","make":"Koenigsegg","model":"One:1","years":"2014–2015","spec":"5.0L twin-turbo V8, 1,341 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/koenigsegg-one1.jpg"},{"id":"koenigsegg-regera","name":"Koenigsegg Regera","make":"Koenigsegg","model":"Regera","years":"2016–2022","spec":"5.0L twin-turbo V8 hybrid, 1,500 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/koenigsegg-regera.jpg"},{"id":"lambo-aventador","name":"Lamborghini Aventador Ultimae","make":"Lamborghini","model":"Aventador Ultimae","years":"2022","spec":"6.5L V12, 769 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/lambo-aventador.jpg"},{"id":"lambo-centenario","name":"Lamborghini Centenario","make":"Lamborghini","model":"Centenario","years":"2016–2017","spec":"6.5L V12, 770 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/lambo-centenario.jpg"},{"id":"lambo-countach-lpi","name":"Lamborghini Countach LPI 800-4","make":"Lamborghini","model":"Countach LPI 800-4","years":"2021–2022","spec":"6.5L V12 hybrid, 803 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/lambo-countach-lpi.jpg"},{"id":"lambo-diablo","name":"Lamborghini Diablo VT 6.0","make":"Lamborghini","model":"Diablo VT 6.0","years":"2000–2001","spec":"6.0L V12, 550 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/lambo-diablo.jpg"},{"id":"lambo-gallardo","name":"Lamborghini Gallardo LP 570-4 Superleggera","make":"Lamborghini","model":"Gallardo LP 570-4 Superleggera","years":"2010–2013","spec":"5.2L V10, 562 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/lambo-gallardo.jpg"},{"id":"lambo-huracan","name":"Lamborghini Huracán STO","make":"Lamborghini","model":"Huracán STO","years":"2021–2024","spec":"5.2L V10, 640 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/lambo-huracan.jpg"},{"id":"lambo-murcielago","name":"Lamborghini Murciélago LP 670-4 SV","make":"Lamborghini","model":"Murciélago LP 670-4 SV","years":"2009–2010","spec":"6.5L V12, 661 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/lambo-murcielago.jpg"},{"id":"lambo-reventon","name":"Lamborghini Reventón","make":"Lamborghini","model":"Reventón","years":"2007–2009","spec":"6.5L V12, 641 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/lambo-reventon.jpg"},{"id":"lambo-revuelto","name":"Lamborghini Revuelto","make":"Lamborghini","model":"Revuelto","years":"2024–2026","spec":"6.5L V12 hybrid, 1,001 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/lambo-revuelto.jpg"},{"id":"lambo-sian","name":"Lamborghini Sián","make":"Lamborghini","model":"Sián","years":"2020–2021","spec":"6.5L V12 hybrid, 819 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/lambo-sian.jpg"},{"id":"lambo-temerario","name":"Lamborghini Temerario","make":"Lamborghini","model":"Temerario","years":"2026","spec":"4.0L twin-turbo V8 hybrid, 907 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/lambo-temerario.jpg"},{"id":"lambo-veneno","name":"Lamborghini Veneno","make":"Lamborghini","model":"Veneno","years":"2013–2014","spec":"6.5L V12, 740 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/lambo-veneno.jpg"},{"id":"lexus-lfa","name":"Lexus LFA","make":"Lexus","model":"LFA","years":"2011–2012","spec":"4.8L V10, 552 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/lexus-lfa.jpg"},{"id":"lotus-elise-sc","name":"Lotus Elise SC Final Edition","make":"Lotus","model":"Elise SC Final Edition","years":"2011","spec":"1.8L supercharged I4, 218 hp","body":"Convertible","status":"Discontinued","category":"Exotic","image":"images/lotus-elise-sc.jpg"},{"id":"lotus-emira-420","name":"Lotus Emira 420 Sport","make":"Lotus","model":"Emira 420 Sport","years":"2023–2026","spec":"3.5L supercharged V6, 416 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/lotus-emira-420.jpg"},{"id":"lotus-esprit-v8","name":"Lotus Esprit V8","make":"Lotus","model":"Esprit V8","years":"1996–2004","spec":"3.5L twin-turbo V8, 350 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/lotus-esprit-v8.jpg"},{"id":"lotus-evija","name":"Lotus Evija","make":"Lotus","model":"Evija","years":"2023–2026","spec":"quad-motor electric, 2,011 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/lotus-evija.jpg"},{"id":"lotus-evora-gt","name":"Lotus Evora GT","make":"Lotus","model":"Evora GT","years":"2020–2021","spec":"3.5L supercharged V6, 416 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/lotus-evora-gt.jpg"},{"id":"lotus-exige-s260","name":"Lotus Exige S260 Final Edition","make":"Lotus","model":"Exige S260 Final Edition","years":"2010–2011","spec":"1.8L supercharged I4, 257 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/lotus-exige-s260.jpg"},{"id":"maserati-granturismo-folgore","name":"Maserati GranTurismo Folgore","make":"Maserati","model":"GranTurismo Folgore","years":"2024–2026","spec":"Tri-motor electric, 751 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/maserati-granturismo-folgore.jpg"},{"id":"maserati-mc12","name":"Maserati MC12","make":"Maserati","model":"MC12","years":"2004–2005","spec":"6.0L V12, 621 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/maserati-mc12.jpg"},{"id":"maserati-mcpura","name":"Maserati MCPura (MC20)","make":"Maserati","model":"MCPura (MC20)","years":"2021–2026","spec":"3.0L twin-turbo V6, 621 hp","body":"Coupe / Cabriolet","status":"Current","category":"Exotic","image":"images/maserati-mcpura.jpg"},{"id":"mclaren-570s","name":"McLaren 570S","make":"McLaren","model":"570S","years":"2015–2021","spec":"3.8L twin-turbo V8, 562 hp","body":"Coupe / Spider","status":"Discontinued","category":"Exotic","image":"images/mclaren-570s.jpg"},{"id":"mclaren-600lt","name":"McLaren 600LT","make":"McLaren","model":"600LT","years":"2018–2019","spec":"3.8L twin-turbo V8, 592 hp","body":"Coupe / Spider","status":"Discontinued","category":"Exotic","image":"images/mclaren-600lt.jpg"},{"id":"mclaren-650s","name":"McLaren 650S","make":"McLaren","model":"650S","years":"2014–2017","spec":"3.8L twin-turbo V8, 641 hp","body":"Coupe / Spider","status":"Discontinued","category":"Exotic","image":"images/mclaren-650s.jpg"},{"id":"mclaren-675lt","name":"McLaren 675LT","make":"McLaren","model":"675LT","years":"2015–2017","spec":"3.8L twin-turbo V8, 666 hp","body":"Coupe / Spider","status":"Discontinued","category":"Exotic","image":"images/mclaren-675lt.jpg"},{"id":"mclaren-720s","name":"McLaren 720S","make":"McLaren","model":"720S","years":"2017–2023","spec":"4.0L twin-turbo V8, 710 hp","body":"Coupe / Spider","status":"Discontinued","category":"Exotic","image":"images/mclaren-720s.jpg"},{"id":"mclaren-750s","name":"McLaren 750S","make":"McLaren","model":"750S","years":"2023–2026","spec":"4.0L twin-turbo V8, 740 hp","body":"Coupe / Spider","status":"Current","category":"Exotic","image":"images/mclaren-750s.jpg"},{"id":"mclaren-765lt","name":"McLaren 765LT","make":"McLaren","model":"765LT","years":"2020–2023","spec":"4.0L twin-turbo V8, 755 hp","body":"Coupe / Spider","status":"Discontinued","category":"Exotic","image":"images/mclaren-765lt.jpg"},{"id":"mclaren-artura","name":"McLaren Artura","make":"McLaren","model":"Artura","years":"2023–2026","spec":"3.0L twin-turbo V6 hybrid, 671 hp","body":"Coupe / Spider","status":"Current","category":"Exotic","image":"images/mclaren-artura.jpg"},{"id":"mclaren-f1","name":"McLaren F1","make":"McLaren","model":"F1","years":"1993–1998","spec":"6.1L V12, 627 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/mclaren-f1.jpg"},{"id":"mclaren-gt","name":"McLaren GT","make":"McLaren","model":"GT","years":"2019–2024","spec":"4.0L twin-turbo V8, 612 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/mclaren-gt.jpg"},{"id":"mclaren-mp4-12c","name":"McLaren MP4-12C","make":"McLaren","model":"MP4-12C","years":"2011–2014","spec":"3.8L twin-turbo V8, 616 hp","body":"Coupe / Spider","status":"Discontinued","category":"Exotic","image":"images/mclaren-mp4-12c.jpg"},{"id":"mclaren-p1","name":"McLaren P1","make":"McLaren","model":"P1","years":"2013–2015","spec":"3.8L twin-turbo V8 hybrid, 903 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/mclaren-p1.jpg"},{"id":"mclaren-senna","name":"McLaren Senna","make":"McLaren","model":"Senna","years":"2018–2021","spec":"4.0L twin-turbo V8, 789 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/mclaren-senna.jpg"},{"id":"mclaren-speedtail","name":"McLaren Speedtail","make":"McLaren","model":"Speedtail","years":"2019–2020","spec":"4.0L twin-turbo V8 hybrid, 1,035 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/mclaren-speedtail.jpg"},{"id":"mclaren-w1","name":"McLaren W1","make":"McLaren","model":"W1","years":"2026","spec":"V8 plug-in hybrid, 1,258 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/mclaren-w1.jpg"},{"id":"mb-amg-one","name":"Mercedes-Benz AMG One","make":"Mercedes-Benz","model":"AMG One","years":"2022–2025","spec":"1.6L V6 hybrid, 1,063 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/mb-amg-one.jpg"},{"id":"mb-clk-gtr","name":"Mercedes-Benz CLK GTR","make":"Mercedes-Benz","model":"CLK GTR","years":"1998–1999","spec":"6.9L V12, 612 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/mb-clk-gtr.jpg"},{"id":"mb-slr-722","name":"Mercedes-Benz SLR McLaren 722","make":"Mercedes-Benz","model":"SLR McLaren 722","years":"2005–2009","spec":"5.4L supercharged V8, 641 hp","body":"Coupe / Convertible","status":"Discontinued","category":"Exotic","image":"images/mb-slr-722.jpg"},{"id":"mb-sls-black","name":"Mercedes-Benz SLS AMG Black Series","make":"Mercedes-Benz","model":"SLS AMG Black Series","years":"2011–2015","spec":"6.2L V8, 622 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/mb-sls-black.jpg"},{"id":"noble-m12","name":"Noble M12 GTO-3R","make":"Noble","model":"M12 GTO-3R","years":"2003–2007","spec":"3.0L twin-turbo V6, 352 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/noble-m12.jpg"},{"id":"noble-m600","name":"Noble M600","make":"Noble","model":"M600","years":"2010–2018","spec":"4.4L twin-turbo V8, 650 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/noble-m600.jpg"},{"id":"pagani-huayra","name":"Pagani Huayra Roadster BC","make":"Pagani","model":"Huayra Roadster BC","years":"2019–2022","spec":"6.0L twin-turbo V12, 791 hp","body":"Convertible","status":"Discontinued","category":"Exotic","image":"images/pagani-huayra.jpg"},{"id":"pagani-utopia","name":"Pagani Utopia","make":"Pagani","model":"Utopia","years":"2023–2026","spec":"6.0L twin-turbo V12, 852 hp","body":"Coupe / Convertible","status":"Current","category":"Exotic","image":"images/pagani-utopia.jpg"},{"id":"pagani-zonda","name":"Pagani Zonda F Clubsport","make":"Pagani","model":"Zonda F Clubsport","years":"2006–2008","spec":"7.3L AMG V12, 641 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/pagani-zonda.jpg"},{"id":"pininfarina-battista","name":"Pininfarina Battista","make":"Pininfarina","model":"Battista","years":"2022–2026","spec":"Electric, 1,900 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/pininfarina-battista.jpg"},{"id":"porsche-911-gt1","name":"Porsche 911 GT1 Straßenversion","make":"Porsche","model":"911 GT1 Straßenversion","years":"1996–1998","spec":"3.2L twin-turbo flat-6, 536 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/porsche-911-gt1.jpg"},{"id":"porsche-918","name":"Porsche 918 Spyder","make":"Porsche","model":"918 Spyder","years":"2014–2015","spec":"4.6L V8 hybrid, 887 hp","body":"Convertible","status":"Discontinued","category":"Exotic","image":"images/porsche-918.jpg"},{"id":"porsche-carrera-gt","name":"Porsche Carrera GT","make":"Porsche","model":"Carrera GT","years":"2004–2006","spec":"5.7L V10, 605 hp","body":"Convertible","status":"Discontinued","category":"Exotic","image":"images/porsche-carrera-gt.jpg"},{"id":"rimac-concept-one","name":"Rimac Concept_One","make":"Rimac","model":"Concept_One","years":"2016–2018","spec":"Electric, 1,224 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/rimac-concept-one.jpg"},{"id":"rimac-nevera","name":"Rimac Nevera","make":"Rimac","model":"Nevera","years":"2022–2026","spec":"Electric, 1,914 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/rimac-nevera.jpg"},{"id":"saleen-s7","name":"Saleen S7 Twin Turbo","make":"Saleen","model":"S7 Twin Turbo","years":"2005–2009","spec":"7.0L twin-turbo V8, 750 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/saleen-s7.jpg"},{"id":"ssc-tuatara","name":"SSC Tuatara","make":"SSC","model":"Tuatara","years":"2020–2026","spec":"5.9L twin-turbo V8, 1,350 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/ssc-tuatara.jpg"},{"id":"ssc-ultimate-aero","name":"SSC Ultimate Aero","make":"SSC","model":"Ultimate Aero","years":"2006–2013","spec":"twin-turbo V8, 1,183 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/ssc-ultimate-aero.jpg"},{"id":"spyker-c8","name":"Spyker C8 Laviolette","make":"Spyker","model":"C8 Laviolette","years":"2001–2011","spec":"4.2L V8, 400 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/spyker-c8.jpg"},{"id":"vector-m12","name":"Vector M12","make":"Vector","model":"M12","years":"1996–1999","spec":"5.7L V12, 492 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/vector-m12.jpg"},{"id":"vector-w8","name":"Vector W8","make":"Vector","model":"W8","years":"1990–1993","spec":"6.0L twin-turbo V8, 625 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/vector-w8.jpg"},{"id":"zenvo-st1","name":"Zenvo ST1","make":"Zenvo","model":"ST1","years":"2009–2016","spec":"6.8L supercharged-and-turbocharged V8, 1,104 hp","body":"Coupe","status":"Discontinued","category":"Exotic","image":"images/zenvo-st1.jpg"},{"id":"zenvo-tsrs","name":"Zenvo TSR-S","make":"Zenvo","model":"TSR-S","years":"2019–2026","spec":"5.8L twin-supercharged V8, 1,177 hp","body":"Coupe","status":"Current","category":"Exotic","image":"images/zenvo-tsrs.jpg"}];
+
+(function () {
+  "use strict";
+
+  const STORAGE_KEY = "supercar-swipe-v3";
+  const LEGACY_KEYS = ["supercar-swipe-v2", "supercar-or-not-v1"];
+  const VOTER_KEY = "supercar-swipe-voter-id";
+  const VALID_VOTES = { super: true, not: true, hyper: true };
+  const SUPABASE_URL = "https://warqoftefgiixqrzuwxl.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_2Yt-mQ3WpYu54-apQB06AQ_5Ax0rT5G";
+  const MIN_VOTES_FOR_PERCENT = 5;
+  const THRESHOLD = 110;
+  const AXIS_BIAS = 1.15;
+  const MAX_ROT = 18;
+  const PRELOAD = 5;
+
+  const els = {
+    swipe: document.getElementById("swipe-screen"),
+    results: document.getElementById("results-screen"),
+    stack: document.getElementById("stack"),
+    progress: document.getElementById("progress"),
+    btnYes: document.getElementById("btn-yes"),
+    btnNo: document.getElementById("btn-no"),
+    btnHyper: document.getElementById("btn-hyper"),
+    btnUndo: document.getElementById("btn-undo"),
+    btnResults: document.getElementById("btn-results"),
+    btnCredits: document.getElementById("btn-credits"),
+    modal: document.getElementById("credits-modal"),
+    resultsList: document.getElementById("results-list"),
+    resultsSummary: document.getElementById("results-summary"),
+    btnPlayAgain: document.getElementById("btn-play-again"),
+    btnKeepSwiping: document.getElementById("btn-keep-swiping"),
+    filterBar: document.getElementById("filter-bar"),
+  };
+
+  const byId = {};
+  CARS.forEach(function (c) { byId[c.id] = c; });
+
+  const state = {
+    order: [],
+    index: 0,
+    votes: {},
+    history: [],
+    busy: false,
+    screen: "swipe",
+    filter: "all",
+  };
+
+  const community = Object.create(null);
+  const voteChains = Object.create(null);
+  let communityStatus = "loading";
+  let countsSeq = 0;
+  let voterIdCache = null;
+
+  function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  }
+
+  function voterId() {
+    if (voterIdCache) return voterIdCache;
+    try {
+      const existing = localStorage.getItem(VOTER_KEY);
+      if (existing && isUuid(existing)) {
+        voterIdCache = existing;
+        return voterIdCache;
+      }
+    } catch (err) {}
+    const id = crypto.randomUUID();
+    voterIdCache = id;
+    try { localStorage.setItem(VOTER_KEY, id); } catch (err) {}
+    return id;
+  }
+
+  function supabaseRpc(name, body) {
+    return fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_KEY,
+        Authorization: "Bearer " + SUPABASE_KEY,
+      },
+      body: JSON.stringify(body),
+    }).then(function (res) {
+      if (!res.ok) throw new Error("rpc");
+      return res.text().then(function (text) {
+        if (!text) return null;
+        return JSON.parse(text);
+      });
+    });
+  }
+
+  function castVote(carId, vote) {
+    let id;
+    try { id = voterId(); } catch (err) { return; }
+    const body = { p_car_id: carId, p_voter_id: id, p_vote: vote };
+    const prev = voteChains[carId] || Promise.resolve();
+    voteChains[carId] = prev.then(function () {
+      return supabaseRpc("cast_vote", body);
+    }).catch(function () {});
+  }
+
+  function whenVotesSettled() {
+    const pending = Object.keys(voteChains).map(function (id) { return voteChains[id]; });
+    return Promise.all(pending).then(function () {}, function () {});
+  }
+
+  function refreshCounts() {
+    const seq = ++countsSeq;
+    whenVotesSettled().then(function () {
+      return supabaseRpc("vote_counts", {});
+    }).then(function (rows) {
+      if (seq !== countsSeq) return;
+      Object.keys(community).forEach(function (key) { delete community[key]; });
+      if (Array.isArray(rows)) {
+        rows.forEach(function (row) {
+          if (!row || typeof row.car_id !== "string") return;
+          const not = Number(row.not_count) || 0;
+          const sup = Number(row.super_count) || 0;
+          const hyp = Number(row.hyper_count) || 0;
+          const reported = Number(row.total);
+          community[row.car_id] = {
+            not: not,
+            super: sup,
+            hyper: hyp,
+            total: reported > 0 ? reported : not + sup + hyp,
+          };
+        });
+      }
+      communityStatus = "ready";
+      if (state.screen === "results") showResults({ skipFetch: true });
+    }).catch(function () {
+      if (seq !== countsSeq) return;
+      if (communityStatus !== "ready") communityStatus = "error";
+      if (state.screen === "results") showResults({ skipFetch: true });
+    });
+  }
+
+  function shuffle(ids) {
+    const a = ids.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function allIds() { return CARS.map(function (c) { return c.id; }); }
+
+  function knownIdSet() {
+    const s = {};
+    CARS.forEach(function (c) { s[c.id] = true; });
+    return s;
+  }
+
+  function newSessionOrder() {
+    return shuffle(allIds());
+  }
+
+  function sanitizeSave(data) {
+    if (!data || typeof data !== "object") return null;
+    const known = knownIdSet();
+    let order = Array.isArray(data.order) ? data.order.filter(function (id) { return known[id]; }) : [];
+    // append any missing cars to the end (list updates)
+    allIds().forEach(function (id) {
+      if (order.indexOf(id) === -1) order.push(id);
+    });
+    if (order.length !== CARS.length) order = newSessionOrder();
+    const votes = {};
+    const rawVotes = data.votes && typeof data.votes === "object" ? data.votes : {};
+    Object.keys(rawVotes).forEach(function (id) {
+      if (known[id] && VALID_VOTES[rawVotes[id]]) votes[id] = rawVotes[id];
+    });
+    let history = Array.isArray(data.history) ? data.history.filter(function (h) {
+      return h && known[h.id] && VALID_VOTES[h.vote] && votes[h.id] === h.vote;
+    }) : [];
+    const inHistory = {};
+    history.forEach(function (h) { inHistory[h.id] = true; });
+    // If we have votes not in history, don't invent order — drop orphan votes not in history
+    // Reconstruct index from history if it matches a prefix of order
+    let index = 0;
+    while (index < order.length && votes[order[index]] && history[index] && history[index].id === order[index]) {
+      index++;
+    }
+    // If history doesn't align with order, rebuild index as history length when all history ids are a prefix we can sort into order
+    if (index !== history.length) {
+      // keep order, set index to count of leading voted cars in order that appear in history sequentially
+      index = 0;
+      const histIds = history.map(function (h) { return h.id; });
+      // If history matches some permutation, just use history length and put those first? Safer: reset to first unvoted in current order
+      for (let i = 0; i < order.length; i++) {
+        if (votes[order[i]]) index = i + 1;
+        else break;
+      }
+    }
+    index = Math.max(0, Math.min(CARS.length, index));
+    return { order: order, index: index, votes: votes, history: history };
+  }
+
+  function load() {
+    try {
+      // Old decks used different car IDs — do not migrate votes, just clear legacy keys.
+      LEGACY_KEYS.forEach(function (k) {
+        try { if (localStorage.getItem(k)) localStorage.removeItem(k); } catch (e) {}
+      });
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        state.order = newSessionOrder();
+        save();
+        return;
+      }
+      const parsed = sanitizeSave(JSON.parse(raw));
+      if (!parsed) {
+        state.order = newSessionOrder();
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        return;
+      }
+      state.order = parsed.order;
+      state.index = parsed.index;
+      state.votes = parsed.votes;
+      state.history = parsed.history;
+    } catch (err) {
+      console.warn("Could not load saved votes", err);
+      state.order = newSessionOrder();
+      state.index = 0;
+      state.votes = {};
+      state.history = [];
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        version: 3,
+        order: state.order,
+        index: state.index,
+        votes: state.votes,
+        history: state.history,
+      }));
+    } catch (err) {
+      console.warn("Could not save votes", err);
+    }
+  }
+
+  function remaining() { return CARS.length - state.index; }
+  function carAt(i) { return byId[state.order[i]] || null; }
+  function currentCar() { return carAt(state.index); }
+
+  function voteLabel(vote) {
+    if (vote === "hyper") return "Hypercar";
+    if (vote === "super") return "Supercar";
+    return "Not";
+  }
+
+  function intentFromDelta(dx, dy) {
+    const ax = Math.abs(dx), ay = Math.abs(dy);
+    if (ay >= THRESHOLD && ay >= ax * AXIS_BIAS && dy < 0) return "hyper";
+    if (ax >= THRESHOLD && ax >= ay * AXIS_BIAS) return dx > 0 ? "super" : "not";
+    return null;
+  }
+
+  function previewIntent(dx, dy) {
+    const ax = Math.abs(dx), ay = Math.abs(dy);
+    if (ax < 8 && ay < 8) return null;
+    if (ay >= ax * AXIS_BIAS && dy < 0) return "hyper";
+    if (ax >= ay * AXIS_BIAS) return dx > 0 ? "super" : "not";
+    return null;
+  }
+
+  function incomingTransform(vote) {
+    if (vote === "hyper") return "translate(0px, -480px) rotate(0deg)";
+    const dir = vote === "super" ? 1 : -1;
+    return "translate(" + (dir * 480) + "px, -20px) rotate(" + (dir * 24) + "deg)";
+  }
+
+  function flyTransform(vote) {
+    if (vote === "hyper") return "translate(0px, -720px) rotate(0deg)";
+    const dir = vote === "super" ? 1 : -1;
+    return "translate(" + (dir * 640) + "px, -40px) rotate(" + (dir * 28) + "deg)";
+  }
+
+  function stampSelector(vote) {
+    if (vote === "hyper") return ".stamp.hyper";
+    if (vote === "super") return ".stamp.super";
+    return ".stamp.not";
+  }
+
+  function preloadAround(index) {
+    for (let i = index; i < index + PRELOAD && i < state.order.length; i++) {
+      const car = carAt(i);
+      if (car && car.image) {
+        const img = new Image();
+        img.src = car.image;
+      }
+    }
+  }
+
+  function renderStack(opts) {
+    opts = opts || {};
+    els.stack.innerHTML = "";
+    const empty = document.createElement("div");
+    empty.className = "stack-empty" + (remaining() === 0 ? " show" : "");
+    empty.textContent = "That's the whole garage.";
+    els.stack.appendChild(empty);
+
+    const count = Math.min(3, remaining());
+    for (let i = count - 1; i >= 0; i--) {
+      const car = carAt(state.index + i);
+      if (!car) continue;
+      els.stack.appendChild(buildCard(car, i === 0, i));
+    }
+
+    if (opts.incoming && els.stack.querySelector(".is-top")) {
+      const top = els.stack.querySelector(".is-top");
+      top.style.transition = "none";
+      top.style.transform = incomingTransform(opts.incoming);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          top.style.transition = "transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.15)";
+          top.style.transform = "";
+        });
+      });
+    }
+
+    els.progress.textContent = Math.min(state.index + 1, CARS.length) + " / " + CARS.length;
+    if (state.index >= CARS.length) els.progress.textContent = CARS.length + " / " + CARS.length;
+    els.btnUndo.disabled = state.history.length === 0 || state.busy;
+    bindTopCard();
+    preloadAround(state.index);
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+
+  function buildCard(car, isTop, offset) {
+    const card = document.createElement("article");
+    card.className = "card " + (isTop ? "is-top" : offset === 1 ? "is-next" : "is-third");
+    card.dataset.id = car.id;
+    const media = car.image
+      ? '<img alt="' + escapeHtml(car.name) + '" src="' + escapeHtml(car.image) + '" draggable="false">'
+      : '<div class="placeholder"><div class="ph-kicker">Supercar Swipe</div><div class="ph-name">' +
+        escapeHtml(car.name) + '</div><div class="ph-years">' + escapeHtml(car.years) +
+        '</div><div class="ph-note">Photo not available</div></div>';
+    const pill = car.spec
+      ? '<div class="spec-pill">' + escapeHtml(car.spec) + "</div>"
+      : "";
+    card.innerHTML =
+      '<div class="card-photo">' + media +
+        '<div class="stamp super" aria-hidden="true">Supercar</div>' +
+        '<div class="stamp not" aria-hidden="true">Not</div>' +
+        '<div class="stamp hyper" aria-hidden="true">Hypercar</div>' +
+        pill +
+      "</div>" +
+      '<div class="card-info">' +
+        "<h2 class=\"card-name\">" + escapeHtml(car.name) + "</h2>" +
+        '<p class="card-meta"><span class="year">' + escapeHtml(car.years) + "</span>" +
+          (car.body ? " · " + escapeHtml(car.body) : "") + "</p>" +
+      "</div>";
+    return card;
+  }
+
+  function bindTopCard() {
+    const card = els.stack.querySelector(".is-top");
+    if (!card) return;
+    attachSwipe(card);
+  }
+
+  function attachSwipe(card) {
+    let startX = 0, startY = 0, dx = 0, dy = 0, dragging = false, pointerId = null;
+    let touchFallback = false;
+    const stampSuper = card.querySelector(".stamp.super");
+    const stampNot = card.querySelector(".stamp.not");
+    const stampHyper = card.querySelector(".stamp.hyper");
+
+    function clearStamps() {
+      stampSuper.style.opacity = 0;
+      stampNot.style.opacity = 0;
+      stampHyper.style.opacity = 0;
+    }
+
+    function apply(x, y) {
+      const preview = previewIntent(x, y);
+      const rot = preview === "hyper"
+        ? Math.max(-8, Math.min(8, x * 0.04))
+        : Math.max(-MAX_ROT, Math.min(MAX_ROT, x * 0.08));
+      card.style.transform = "translate(" + x + "px, " + y + "px) rotate(" + rot + "deg)";
+      clearStamps();
+      if (preview === "super") stampSuper.style.opacity = Math.max(0, Math.min(1, Math.abs(x) / THRESHOLD));
+      else if (preview === "not") stampNot.style.opacity = Math.max(0, Math.min(1, Math.abs(x) / THRESHOLD));
+      else if (preview === "hyper") stampHyper.style.opacity = Math.max(0, Math.min(1, Math.abs(y) / THRESHOLD));
+    }
+
+    function down(x, y, id) {
+      if (state.busy) return;
+      dragging = true;
+      pointerId = id;
+      startX = x; startY = y; dx = 0; dy = 0;
+      card.style.transition = "none";
+    }
+
+    function move(x, y) {
+      if (!dragging) return;
+      dx = x - startX;
+      dy = y - startY;
+      const visualY = dy < 0 ? dy : dy * 0.35;
+      apply(dx, visualY);
+    }
+
+    function up() {
+      if (!dragging) return;
+      dragging = false;
+      pointerId = null;
+      const vote = intentFromDelta(dx, dy);
+      if (vote) decide(vote);
+      else {
+        card.style.transition = "transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+        card.style.transform = "";
+        clearStamps();
+      }
+    }
+
+    if (window.PointerEvent) {
+      card.addEventListener("pointerdown", function (e) {
+        if (e.button !== undefined && e.button !== 0) return;
+        touchFallback = false;
+        card.setPointerCapture(e.pointerId);
+        down(e.clientX, e.clientY, e.pointerId);
+      });
+      card.addEventListener("pointermove", function (e) {
+        if (pointerId !== e.pointerId) return;
+        move(e.clientX, e.clientY);
+      });
+      card.addEventListener("pointerup", function (e) {
+        if (pointerId !== null && pointerId !== e.pointerId) return;
+        up();
+      });
+      card.addEventListener("pointercancel", up);
+    }
+
+    card.addEventListener("touchstart", function (e) {
+      if (window.PointerEvent) return;
+      if (e.touches.length !== 1) return;
+      touchFallback = true;
+      const t = e.touches[0];
+      down(t.clientX, t.clientY, t.identifier);
+    }, { passive: true });
+    card.addEventListener("touchmove", function (e) {
+      if (!touchFallback || !dragging) return;
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      move(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
+    card.addEventListener("touchend", function () {
+      if (!touchFallback) return;
+      up();
+      touchFallback = false;
+    });
+    card.addEventListener("touchcancel", function () {
+      if (!touchFallback) return;
+      up();
+      touchFallback = false;
+    });
+  }
+
+  function decide(vote) {
+    if (state.busy) return;
+    const car = currentCar();
+    if (!car || !VALID_VOTES[vote]) return;
+    state.busy = true;
+    els.btnUndo.disabled = true;
+
+    const card = els.stack.querySelector(".is-top");
+    const next = els.stack.querySelector(".is-next");
+    const third = els.stack.querySelector(".is-third");
+
+    if (card) {
+      const stamp = card.querySelector(stampSelector(vote));
+      if (stamp) stamp.style.opacity = "1";
+      card.style.transition = "transform 0.38s ease-in, opacity 0.38s ease-in";
+      card.style.transform = flyTransform(vote);
+      card.style.opacity = "0";
+    }
+    if (next) {
+      next.style.transition = "transform 0.38s ease, opacity 0.38s ease";
+      next.style.transform = "";
+      next.style.opacity = "1";
+      next.classList.remove("is-next");
+    }
+    if (third) {
+      third.style.transition = "transform 0.38s ease, opacity 0.38s ease";
+      third.classList.remove("is-third");
+      third.classList.add("is-next");
+    }
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
+
+    window.setTimeout(function () {
+      state.votes[car.id] = vote;
+      state.history.push({ id: car.id, vote: vote });
+      state.index += 1;
+      state.busy = false;
+      castVote(car.id, vote);
+      save();
+      if (state.index >= CARS.length) {
+        renderStack();
+        window.setTimeout(showResults, 280);
+      } else {
+        renderStack();
+      }
+    }, 380);
+  }
+
+  function undo() {
+    if (state.busy || state.history.length === 0) return;
+    if (state.screen === "results") showSwipe();
+    const last = state.history.pop();
+    delete state.votes[last.id];
+    castVote(last.id, null);
+    state.index = Math.max(0, state.index - 1);
+    if (!carAt(state.index) || carAt(state.index).id !== last.id) {
+      const idx = state.order.indexOf(last.id);
+      if (idx >= 0) state.index = idx;
+    }
+    save();
+    renderStack({ incoming: last.vote });
+  }
+
+  function countPhrase(n, singular, plural) {
+    return n + " " + (n === 1 ? singular : plural);
+  }
+
+  function percents(not, sup, hyp) {
+    const total = not + sup + hyp;
+    const out = { not: 0, super: 0, hyper: 0 };
+    if (total <= 0) return out;
+    const parts = [
+      { key: "not", value: not },
+      { key: "super", value: sup },
+      { key: "hyper", value: hyp },
+    ].map(function (part) {
+      const exact = (part.value * 100) / total;
+      const floor = Math.floor(exact);
+      return { key: part.key, floor: floor, rem: exact - floor };
+    });
+    let used = 0;
+    parts.forEach(function (part) { used += part.floor; });
+    parts.sort(function (a, b) {
+      if (b.rem !== a.rem) return b.rem - a.rem;
+      return a.key < b.key ? -1 : 1;
+    });
+    let left = 100 - used;
+    for (let i = 0; left > 0 && i < parts.length; i++) {
+      parts[i].floor += 1;
+      left -= 1;
+    }
+    parts.forEach(function (part) { out[part.key] = part.floor; });
+    return out;
+  }
+
+  function communityMarkup(carId) {
+    if (communityStatus === "loading") {
+      return { bar: "", text: "Community votes loading…" };
+    }
+    if (communityStatus === "error") {
+      return { bar: "", text: "Community totals unavailable" };
+    }
+    const row = community[carId];
+    const not = row ? row.not : 0;
+    const sup = row ? row.super : 0;
+    const hyp = row ? row.hyper : 0;
+    const total = row && row.total > 0 ? row.total : not + sup + hyp;
+    if (total <= 0) return { bar: "", text: "No community votes yet" };
+    if (total < MIN_VOTES_FOR_PERCENT) {
+      return {
+        bar: "",
+        text: "Only " + total + (total === 1 ? " vote" : " votes") + " so far — " +
+          not + " not · " + sup + " supercar · " + hyp + " hypercar",
+      };
+    }
+    const pct = percents(not, sup, hyp);
+    return {
+      bar:
+        '<div class="bar" aria-hidden="true">' +
+          '<div class="bar-seg not" style="width:' + pct.not + '%"></div>' +
+          '<div class="bar-seg super" style="width:' + pct.super + '%"></div>' +
+          '<div class="bar-seg hyper" style="width:' + pct.hyper + '%"></div>' +
+        "</div>",
+      text: "Community: " + pct.not + "% not · " + pct.super + "% supercar · " +
+        pct.hyper + "% hypercar · " + total + " votes",
+    };
+  }
+
+  function renderFilterCounts() {
+    const counts = { all: 0, hyper: 0, super: 0, not: 0 };
+    state.order.forEach(function (id) {
+      const v = state.votes[id];
+      if (!v) return;
+      counts.all++;
+      counts[v]++;
+    });
+    Array.prototype.forEach.call(els.filterBar.querySelectorAll(".chip"), function (chip) {
+      const f = chip.getAttribute("data-filter");
+      const n = counts[f] || 0;
+      const label = chip.getAttribute("data-label");
+      chip.textContent = label + (f === "all" ? " (" + n + ")" : " (" + n + ")");
+      chip.classList.toggle("active", state.filter === f);
+    });
+  }
+
+  function showResults(opts) {
+    state.screen = "results";
+    els.swipe.classList.add("hide");
+    els.results.classList.add("show");
+    const votedIds = state.order.filter(function (id) { return state.votes[id]; });
+    const hypers = votedIds.filter(function (id) { return state.votes[id] === "hyper"; }).length;
+    const supers = votedIds.filter(function (id) { return state.votes[id] === "super"; }).length;
+    const nots = votedIds.filter(function (id) { return state.votes[id] === "not"; }).length;
+    const breakdown = countPhrase(hypers, "hypercar", "hypercars") + ", " +
+      countPhrase(supers, "supercar", "supercars") + ", and " +
+      countPhrase(nots, "not", "nots");
+    if (votedIds.length === 0) {
+      els.resultsSummary.textContent = "You haven't judged any cars yet.";
+    } else if (votedIds.length < CARS.length) {
+      els.resultsSummary.textContent = "You called " + breakdown + " · " + (CARS.length - votedIds.length) + " still in the stack.";
+    } else {
+      els.resultsSummary.textContent = "You called " + breakdown + ".";
+    }
+    els.btnKeepSwiping.style.display = votedIds.length < CARS.length ? "block" : "none";
+    renderFilterCounts();
+
+    const filtered = votedIds.filter(function (id) {
+      if (state.filter === "all") return true;
+      return state.votes[id] === state.filter;
+    });
+
+    if (filtered.length === 0) {
+      els.resultsList.innerHTML = '<div class="results-empty">No cars in this filter yet.</div>';
+      if (!opts || !opts.skipFetch) refreshCounts();
+      return;
+    }
+
+    els.resultsList.innerHTML = filtered.map(function (id) {
+      const car = byId[id];
+      const you = state.votes[id];
+      const communityView = communityMarkup(id);
+      const thumb = car.image
+        ? '<img alt="" src="' + escapeHtml(car.image) + '">'
+        : '<div class="ph-thumb">No photo</div>';
+      return (
+        '<article class="result-row">' + thumb +
+          "<div>" +
+            "<h3>" + escapeHtml(car.name) + "</h3>" +
+            '<p class="sub">' + escapeHtml(car.years) + (car.spec ? " · " + escapeHtml(car.spec) : "") + "</p>" +
+            '<span class="you-pill ' + you + '">You: ' + voteLabel(you) + "</span>" +
+            communityView.bar +
+            '<div class="comm">' + escapeHtml(communityView.text) + "</div>" +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+    if (!opts || !opts.skipFetch) refreshCounts();
+  }
+
+  function showSwipe() {
+    state.screen = "swipe";
+    els.results.classList.remove("show");
+    els.swipe.classList.remove("hide");
+    renderStack();
+  }
+
+  function playAgain() {
+    Object.keys(state.votes).forEach(function (id) { castVote(id, null); });
+    state.order = newSessionOrder();
+    state.index = 0;
+    state.votes = {};
+    state.history = [];
+    state.busy = false;
+    state.filter = "all";
+    save();
+    showSwipe();
+  }
+
+  function openCredits() { els.modal.classList.add("show"); }
+  function closeCredits() { els.modal.classList.remove("show"); }
+
+  els.btnYes.addEventListener("click", function () { decide("super"); });
+  els.btnNo.addEventListener("click", function () { decide("not"); });
+  els.btnHyper.addEventListener("click", function () { decide("hyper"); });
+  els.btnUndo.addEventListener("click", undo);
+  els.btnResults.addEventListener("click", showResults);
+  els.btnCredits.addEventListener("click", openCredits);
+  els.modal.addEventListener("click", function (e) {
+    if (e.target === els.modal || e.target.hasAttribute("data-close")) closeCredits();
+  });
+  els.btnPlayAgain.addEventListener("click", playAgain);
+  els.btnKeepSwiping.addEventListener("click", showSwipe);
+  els.filterBar.addEventListener("click", function (e) {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    state.filter = chip.getAttribute("data-filter");
+    showResults({ skipFetch: true });
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && els.modal.classList.contains("show")) {
+      closeCredits();
+      return;
+    }
+    if (els.modal.classList.contains("show")) return;
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      if (state.screen === "swipe") decide("super");
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      if (state.screen === "swipe") decide("not");
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (state.screen === "swipe") decide("hyper");
+    } else if (e.key === "Backspace" || e.key === "u" || e.key === "U") {
+      if (e.key === "Backspace") e.preventDefault();
+      undo();
+    }
+  });
+
+  load();
+  refreshCounts();
+  if (state.index >= CARS.length && Object.keys(state.votes).length > 0) {
+    renderStack();
+    showResults();
+  } else {
+    renderStack();
+  }
+})();
+
+  </script>
+</body>
+</html>
